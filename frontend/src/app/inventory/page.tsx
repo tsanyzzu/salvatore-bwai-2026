@@ -1,0 +1,322 @@
+"use client";
+
+import React from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  Package,
+  Plus,
+  Minus,
+  Search,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  AlertTriangle,
+} from "lucide-react";
+
+/* ===== Mock Inventory Data ===== */
+const inventoryItems = [
+  {
+    id: 1,
+    name: "Kopi Arabica Toraja 250g",
+    sku: "KAT-250",
+    stock: 45,
+    minStock: 10,
+    price: 85000,
+    category: "Kopi",
+    lastTransaction: "Masuk +20",
+    lastDate: "28 Mei 2026",
+  },
+  {
+    id: 2,
+    name: "Gula Aren Organik 500g",
+    sku: "GAO-500",
+    stock: 8,
+    minStock: 15,
+    price: 35000,
+    category: "Bahan",
+    lastTransaction: "Keluar -12",
+    lastDate: "27 Mei 2026",
+  },
+  {
+    id: 3,
+    name: "Tumbler Bambu Eco 350ml",
+    sku: "TBE-350",
+    stock: 120,
+    minStock: 20,
+    price: 125000,
+    category: "Merchandise",
+    lastTransaction: "Masuk +50",
+    lastDate: "26 Mei 2026",
+  },
+  {
+    id: 4,
+    name: "Sambal Matah Homemade 200ml",
+    sku: "SMH-200",
+    stock: 3,
+    minStock: 10,
+    price: 28000,
+    category: "Makanan",
+    lastTransaction: "Keluar -7",
+    lastDate: "28 Mei 2026",
+  },
+];
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(amount);
+}
+
+export default function InventoryPage() {
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const filteredItems = inventoryItems.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.sku.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const lowStockCount = inventoryItems.filter(
+    (i) => i.stock <= i.minStock
+  ).length;
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* ===== Page Header ===== */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Inventory Manager
+          </h1>
+          <p className="text-sm text-[var(--muted)] mt-1">
+            Kelola stok & cashflow barang Anda.
+          </p>
+        </div>
+        <Button variant="gradient">
+          <Plus className="h-4 w-4" />
+          Tambah Transaksi
+        </Button>
+      </div>
+
+      {/* ===== Quick Stats ===== */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-children">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wider">
+              Total Produk
+            </p>
+            <p className="text-2xl font-bold mt-1">
+              {inventoryItems.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wider">
+              Total Stok
+            </p>
+            <p className="text-2xl font-bold mt-1">
+              {inventoryItems.reduce((sum, i) => sum + i.stock, 0)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wider">
+              Nilai Inventori
+            </p>
+            <p className="text-2xl font-bold mt-1">
+              {formatCurrency(
+                inventoryItems.reduce(
+                  (sum, i) => sum + i.stock * i.price,
+                  0
+                )
+              )}
+            </p>
+          </CardContent>
+        </Card>
+        <Card
+          className={
+            lowStockCount > 0
+              ? "border-[var(--warning)]/40 bg-[var(--warning)]/5"
+              : ""
+          }
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center gap-1.5">
+              {lowStockCount > 0 && (
+                <AlertTriangle className="h-3.5 w-3.5 text-[var(--warning)]" />
+              )}
+              <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wider">
+                Stok Rendah
+              </p>
+            </div>
+            <p className="text-2xl font-bold mt-1">{lowStockCount}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ===== Add Transaction Form ===== */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Catat Transaksi Baru</CardTitle>
+          <CardDescription>
+            Input transaksi masuk/keluar stok barang
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Select
+              label="Produk"
+              placeholder="Pilih produk..."
+              options={inventoryItems.map((i) => ({
+                value: i.sku,
+                label: i.name,
+              }))}
+            />
+            <Select
+              label="Tipe"
+              placeholder="Pilih tipe..."
+              options={[
+                { value: "in", label: "📥 Barang Masuk" },
+                { value: "out", label: "📤 Barang Keluar" },
+              ]}
+            />
+            <Input label="Jumlah" type="number" placeholder="0" min={1} />
+            <div className="flex items-end">
+              <Button type="submit" className="w-full">
+                Simpan
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* ===== Inventory Table ===== */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <CardTitle>Daftar Inventori</CardTitle>
+              <CardDescription>
+                {filteredItems.length} produk ditemukan
+              </CardDescription>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)]" />
+              <input
+                type="text"
+                placeholder="Cari produk atau SKU..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] pl-9 pr-3 text-sm placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-colors"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)]/50">
+                  <th className="text-left py-3 px-5 font-medium text-[var(--muted)]">
+                    Produk
+                  </th>
+                  <th className="text-left py-3 px-5 font-medium text-[var(--muted)] hidden sm:table-cell">
+                    SKU
+                  </th>
+                  <th className="text-right py-3 px-5 font-medium text-[var(--muted)]">
+                    Stok
+                  </th>
+                  <th className="text-right py-3 px-5 font-medium text-[var(--muted)] hidden md:table-cell">
+                    Harga
+                  </th>
+                  <th className="text-left py-3 px-5 font-medium text-[var(--muted)] hidden lg:table-cell">
+                    Transaksi Terakhir
+                  </th>
+                  <th className="text-center py-3 px-5 font-medium text-[var(--muted)]">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map((item) => {
+                  const isLowStock = item.stock <= item.minStock;
+                  return (
+                    <tr
+                      key={item.id}
+                      className="border-b border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors"
+                    >
+                      <td className="py-3 px-5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 shrink-0 rounded-[var(--radius-md)] bg-[var(--primary)]/10 flex items-center justify-center">
+                            <Package className="h-4 w-4 text-[var(--primary)]" />
+                          </div>
+                          <div>
+                            <p className="font-medium line-clamp-1">
+                              {item.name}
+                            </p>
+                            <p className="text-[10px] text-[var(--muted-foreground)]">
+                              {item.category}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-5 text-[var(--muted)] hidden sm:table-cell font-mono text-xs">
+                        {item.sku}
+                      </td>
+                      <td className="py-3 px-5 text-right">
+                        <span className="font-semibold">{item.stock}</span>
+                        {isLowStock && (
+                          <Badge variant="warning" className="ml-2">
+                            Low
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="py-3 px-5 text-right text-[var(--muted)] hidden md:table-cell">
+                        {formatCurrency(item.price)}
+                      </td>
+                      <td className="py-3 px-5 hidden lg:table-cell">
+                        <div className="flex items-center gap-1.5">
+                          {item.lastTransaction.includes("Masuk") ? (
+                            <ArrowDownCircle className="h-3.5 w-3.5 text-[var(--success)]" />
+                          ) : (
+                            <ArrowUpCircle className="h-3.5 w-3.5 text-[var(--danger)]" />
+                          )}
+                          <span className="text-xs text-[var(--muted)]">
+                            {item.lastTransaction} · {item.lastDate}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-5 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Minus className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Plus className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
