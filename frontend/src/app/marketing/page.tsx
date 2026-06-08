@@ -24,48 +24,48 @@ import {
   Wand2,
 } from "lucide-react";
 
-/* ===== Mock Generated Captions ===== */
-const mockCaptions = [
-  {
-    id: 1,
-    platform: "Instagram",
-    icon: Camera,
-    caption:
-      "☕ Nikmati sensasi Kopi Arabica Toraja premium yang dipetik langsung dari pegunungan! 🏔️\n\nAroma khas dan rasa full-body yang bikin nagih. Limited stock — grab yours now!\n\n✨ Harga spesial Rp 85.000/250g\n🚚 Free ongkir se-Indonesia\n\n#KopiToraja #KopiArabica #KopiIndonesia #UMKM #KopiNusantara",
-    tone: "Engaging",
-  },
-  {
-    id: 2,
-    platform: "Shopee",
-    icon: ShoppingBag,
-    caption:
-      "🔥 BEST SELLER! Kopi Arabica Toraja 250g — Rasa Premium, Harga Terjangkau!\n\n✅ 100% Biji pilihan dari Toraja\n✅ Proses roasting sempurna\n✅ Fresh & aromatic\n✅ Cocok untuk V60, French Press, & Espresso\n\n⭐ Rating 4.9/5 dari 500+ review\n💰 Hanya Rp 85.000\n\nOrder sekarang sebelum kehabisan!",
-    tone: "Sales-driven",
-  },
-  {
-    id: 3,
-    platform: "WhatsApp",
-    icon: MessageCircle,
-    caption:
-      "Halo kak! 👋\n\nMau info produk terbaru nih — *Kopi Arabica Toraja 250g*\n\n☕ Biji premium dari pegunungan Toraja\n💰 Harga: Rp 85.000\n🚚 Free ongkir!\n\nMau order? Langsung aja reply chat ini ya kak! 😊",
-    tone: "Friendly",
-  },
-];
+/* Removed Mock Captions */
+
+import { generateMarketingCaption } from "@/lib/api";
 
 export default function MarketingPage() {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [copied, setCopied] = React.useState<number | null>(null);
+  
+  // Form State
+  const [productName, setProductName] = React.useState("");
+  const [price, setPrice] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [platform, setPlatform] = React.useState("instagram");
+  const [tone, setTone] = React.useState("engaging");
+  
+  // Results State
+  const [captions, setCaptions] = React.useState<any[]>([]);
 
-  const handleGenerate = (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!productName || !price || !description) return;
+    
     setIsGenerating(true);
-    // Simulate API call
-    setTimeout(() => setIsGenerating(false), 2000);
+    try {
+      const results = await generateMarketingCaption({
+        product_name: productName,
+        price: parseFloat(price),
+        description,
+        platform,
+        tone
+      });
+      setCaptions(results);
+    } catch (err) {
+      alert("Gagal generate caption. Pastikan backend berjalan.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const handleCopy = (id: number, text: string) => {
+  const handleCopy = (index: number, text: string) => {
     navigator.clipboard.writeText(text);
-    setCopied(id);
+    setCopied(index);
     setTimeout(() => setCopied(null), 2000);
   };
 
@@ -100,21 +100,29 @@ export default function MarketingPage() {
               <Input
                 label="Nama Produk"
                 placeholder="e.g. Kopi Arabica Toraja 250g"
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
               />
               <Input
                 label="Harga"
                 placeholder="e.g. 85000"
                 type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
               />
             </div>
             <Textarea
               label="Deskripsi Produk"
               placeholder="Jelaskan keunggulan, bahan, atau fitur unik produk Anda..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
             <div className="grid sm:grid-cols-2 gap-4">
               <Select
                 label="Platform"
                 placeholder="Pilih platform..."
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
                 options={[
                   { value: "instagram", label: "📸 Instagram" },
                   { value: "shopee", label: "🛍️ Shopee / Tokopedia" },
@@ -125,6 +133,8 @@ export default function MarketingPage() {
               <Select
                 label="Tone"
                 placeholder="Pilih tone..."
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
                 options={[
                   { value: "engaging", label: "✨ Engaging" },
                   { value: "professional", label: "💼 Professional" },
@@ -160,12 +170,12 @@ export default function MarketingPage() {
       <div>
         <h2 className="text-lg font-semibold mb-3">Hasil Generate</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
-          {mockCaptions.map((item) => (
-            <Card key={item.id} className="flex flex-col">
+          {captions.map((item, idx) => (
+            <Card key={idx} className="flex flex-col">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <item.icon className="h-4 w-4 text-[var(--primary)]" />
+                    <Sparkles className="h-4 w-4 text-[var(--primary)]" />
                     <CardTitle className="text-sm">{item.platform}</CardTitle>
                   </div>
                   <Badge variant="secondary">{item.tone}</Badge>
@@ -181,14 +191,10 @@ export default function MarketingPage() {
                   variant="secondary"
                   size="sm"
                   className="flex-1"
-                  onClick={() => handleCopy(item.id, item.caption)}
+                  onClick={() => handleCopy(idx, item.caption)}
                 >
                   <Copy className="h-3.5 w-3.5" />
-                  {copied === item.id ? "Copied!" : "Copy"}
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  Regenerate
+                  {copied === idx ? "Copied!" : "Copy"}
                 </Button>
               </CardFooter>
             </Card>

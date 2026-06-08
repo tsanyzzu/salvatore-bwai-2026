@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardHeader,
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+
 import {
   Package,
   Plus,
@@ -20,55 +21,10 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
-
-/* ===== Mock Inventory Data ===== */
-const inventoryItems = [
-  {
-    id: 1,
-    name: "Kopi Arabica Toraja 250g",
-    sku: "KAT-250",
-    stock: 45,
-    minStock: 10,
-    price: 85000,
-    category: "Kopi",
-    lastTransaction: "Masuk +20",
-    lastDate: "28 Mei 2026",
-  },
-  {
-    id: 2,
-    name: "Gula Aren Organik 500g",
-    sku: "GAO-500",
-    stock: 8,
-    minStock: 15,
-    price: 35000,
-    category: "Bahan",
-    lastTransaction: "Keluar -12",
-    lastDate: "27 Mei 2026",
-  },
-  {
-    id: 3,
-    name: "Tumbler Bambu Eco 350ml",
-    sku: "TBE-350",
-    stock: 120,
-    minStock: 20,
-    price: 125000,
-    category: "Merchandise",
-    lastTransaction: "Masuk +50",
-    lastDate: "26 Mei 2026",
-  },
-  {
-    id: 4,
-    name: "Sambal Matah Homemade 200ml",
-    sku: "SMH-200",
-    stock: 3,
-    minStock: 10,
-    price: 28000,
-    category: "Makanan",
-    lastTransaction: "Keluar -7",
-    lastDate: "28 Mei 2026",
-  },
-];
+import { useStore } from "@/lib/useStore";
+import { addTransaction } from "@/lib/api";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -79,16 +35,53 @@ function formatCurrency(amount: number) {
 }
 
 export default function InventoryPage() {
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const { inventory, isLoading, loadInventory, updateStock } = useStore();
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Form State
+  const [sku, setSku] = useState("");
+  const [type, setType] = useState("");
+  const [qty, setQty] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredItems = inventoryItems.filter(
+  useEffect(() => {
+    loadInventory();
+  }, [loadInventory]);
+
+  const handleTransaction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sku || !type || !qty) return;
+    
+    setIsSubmitting(true);
+    try {
+      const res = await addTransaction({
+        sku,
+        type,
+        quantity: parseInt(qty, 10),
+      });
+      if (res.status === "success") {
+        updateStock(sku, res.new_stock);
+        setSku("");
+        setType("");
+        setQty("");
+      } else {
+        alert(res.message);
+      }
+    } catch (err) {
+      alert("Gagal menambahkan transaksi");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const filteredItems = inventory.filter(
     (item) =>
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.sku.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const lowStockCount = inventoryItems.filter(
-    (i) => i.stock <= i.minStock
+  const lowStockCount = inventory.filter(
+    (i) => i.stock <= i.min_stock
   ).length;
 
   return (
@@ -117,7 +110,7 @@ export default function InventoryPage() {
               Total Produk
             </p>
             <p className="text-2xl font-bold mt-1">
-              {inventoryItems.length}
+              {inventory.length}
             </p>
           </CardContent>
         </Card>
@@ -127,7 +120,7 @@ export default function InventoryPage() {
               Total Stok
             </p>
             <p className="text-2xl font-bold mt-1">
-              {inventoryItems.reduce((sum, i) => sum + i.stock, 0)}
+              {inventory.reduce((sum, i) => sum + i.stock, 0)}
             </p>
           </CardContent>
         </Card>
@@ -138,7 +131,7 @@ export default function InventoryPage() {
             </p>
             <p className="text-2xl font-bold mt-1">
               {formatCurrency(
-                inventoryItems.reduce(
+                inventory.reduce(
                   (sum, i) => sum + i.stock * i.price,
                   0
                 )
@@ -176,11 +169,13 @@ export default function InventoryPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <form onSubmit={handleTransaction} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Select
               label="Produk"
               placeholder="Pilih produk..."
-              options={inventoryItems.map((i) => ({
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              options={inventory.map((i) => ({
                 value: i.sku,
                 label: i.name,
               }))}
@@ -188,15 +183,17 @@ export default function InventoryPage() {
             <Select
               label="Tipe"
               placeholder="Pilih tipe..."
+              value={type}
+              onChange={(e) => setType(e.target.value)}
               options={[
                 { value: "in", label: "📥 Barang Masuk" },
                 { value: "out", label: "📤 Barang Keluar" },
               ]}
             />
-            <Input label="Jumlah" type="number" placeholder="0" min={1} />
+            <Input label="Jumlah" type="number" placeholder="0" min={1} value={qty} onChange={(e) => setQty(e.target.value)} />
             <div className="flex items-end">
-              <Button type="submit" className="w-full">
-                Simpan
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Menyimpan..." : "Simpan"}
               </Button>
             </div>
           </form>
@@ -252,7 +249,7 @@ export default function InventoryPage() {
               </thead>
               <tbody>
                 {filteredItems.map((item) => {
-                  const isLowStock = item.stock <= item.minStock;
+                  const isLowStock = item.stock <= item.min_stock;
                   return (
                     <tr
                       key={item.id}
@@ -288,16 +285,9 @@ export default function InventoryPage() {
                         {formatCurrency(item.price)}
                       </td>
                       <td className="py-3 px-5 hidden lg:table-cell">
-                        <div className="flex items-center gap-1.5">
-                          {item.lastTransaction.includes("Masuk") ? (
-                            <ArrowDownCircle className="h-3.5 w-3.5 text-[var(--success)]" />
-                          ) : (
-                            <ArrowUpCircle className="h-3.5 w-3.5 text-[var(--danger)]" />
-                          )}
-                          <span className="text-xs text-[var(--muted)]">
-                            {item.lastTransaction} · {item.lastDate}
-                          </span>
-                        </div>
+                        <span className="text-xs text-[var(--muted)]">
+                          —
+                        </span>
                       </td>
                       <td className="py-3 px-5 text-center">
                         <div className="flex items-center justify-center gap-1">
