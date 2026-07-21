@@ -35,7 +35,7 @@ function formatCurrency(amount: number) {
 }
 
 export default function InventoryPage() {
-  const { inventory, isLoading, loadInventory, updateStock } = useStore();
+  const { inventory, transactions, isLoading, loadInventory, loadTransactions, updateStock } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   
   // Form State
@@ -46,7 +46,32 @@ export default function InventoryPage() {
 
   useEffect(() => {
     loadInventory();
-  }, [loadInventory]);
+    loadTransactions();
+  }, [loadInventory, loadTransactions]);
+
+  const handleQuickAdjustment = async (itemSku: string, transactionType: "in" | "out") => {
+    try {
+      const res = await addTransaction({
+        sku: itemSku,
+        type: transactionType,
+        quantity: 1,
+      });
+      if (res.status === "success") {
+        updateStock(itemSku, res.new_stock);
+      } else {
+        alert(res.message);
+      }
+    } catch (err) {
+      alert("Gagal memperbarui stok");
+    }
+  };
+
+  const scrollToForm = () => {
+    const el = document.getElementById("transaction-form-card");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const handleTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +121,7 @@ export default function InventoryPage() {
             Kelola stok & cashflow barang Anda.
           </p>
         </div>
-        <Button variant="gradient">
+        <Button variant="gradient" onClick={scrollToForm}>
           <Plus className="h-4 w-4" />
           Tambah Transaksi
         </Button>
@@ -161,7 +186,7 @@ export default function InventoryPage() {
       </div>
 
       {/* ===== Add Transaction Form ===== */}
-      <Card>
+      <Card id="transaction-form-card">
         <CardHeader>
           <CardTitle>Catat Transaksi Baru</CardTitle>
           <CardDescription>
@@ -250,6 +275,9 @@ export default function InventoryPage() {
               <tbody>
                 {filteredItems.map((item) => {
                   const isLowStock = item.stock <= item.min_stock;
+                  const itemTx = transactions.filter((t) => t.sku === item.sku);
+                  const lastTx = itemTx.length > 0 ? itemTx[0] : null;
+                  
                   return (
                     <tr
                       key={item.id}
@@ -285,16 +313,34 @@ export default function InventoryPage() {
                         {formatCurrency(item.price)}
                       </td>
                       <td className="py-3 px-5 hidden lg:table-cell">
-                        <span className="text-xs text-[var(--muted)]">
-                          —
-                        </span>
+                        {lastTx ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                              lastTx.type === "in"
+                                ? "bg-emerald-500/10 text-emerald-500"
+                                : "bg-rose-500/10 text-rose-500"
+                            }`}>
+                              {lastTx.type === "in" ? "IN" : "OUT"}
+                            </span>
+                            <span className="text-xs text-[var(--muted)]">
+                              {lastTx.quantity} unit ({new Date(lastTx.created_at).toLocaleDateString("id-ID", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              })})
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-[var(--muted)]">
+                            —
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-5 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleQuickAdjustment(item.sku, "out")}>
                             <Minus className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleQuickAdjustment(item.sku, "in")}>
                             <Plus className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -302,6 +348,68 @@ export default function InventoryPage() {
                     </tr>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ===== Transaction History Log ===== */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Riwayat Transaksi Stok</CardTitle>
+          <CardDescription>
+            Log keluar/masuk barang secara real-time
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto max-h-80 overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--border)] bg-[var(--surface-hover)]/50">
+                  <th className="text-left py-2.5 px-5 font-medium text-[var(--muted)]">Tanggal</th>
+                  <th className="text-left py-2.5 px-5 font-medium text-[var(--muted)]">SKU</th>
+                  <th className="text-left py-2.5 px-5 font-medium text-[var(--muted)]">Produk</th>
+                  <th className="text-center py-2.5 px-5 font-medium text-[var(--muted)]">Tipe</th>
+                  <th className="text-right py-2.5 px-5 font-medium text-[var(--muted)]">Jumlah</th>
+                  <th className="text-left py-2.5 px-5 font-medium text-[var(--muted)]">Catatan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-6 text-[var(--muted)]">
+                      Belum ada transaksi stok tercatat.
+                    </td>
+                  </tr>
+                ) : (
+                  transactions.map((tx) => {
+                    const matchedItem = inventory.find((i) => i.sku === tx.sku);
+                    return (
+                      <tr key={tx.id} className="border-b border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors">
+                        <td className="py-2.5 px-5 text-xs text-[var(--muted)]">
+                          {new Date(tx.created_at).toLocaleString("id-ID", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </td>
+                        <td className="py-2.5 px-5 font-mono text-xs text-[var(--muted)]">{tx.sku}</td>
+                        <td className="py-2.5 px-5 font-medium">{matchedItem ? matchedItem.name : "Produk Tidak Dikenal"}</td>
+                        <td className="py-2.5 px-5 text-center">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            tx.type === "in"
+                              ? "bg-emerald-500/10 text-emerald-500"
+                              : "bg-rose-500/10 text-rose-500"
+                          }`}>
+                            {tx.type === "in" ? "Masuk" : "Keluar"}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-5 text-right font-semibold">{tx.quantity}</td>
+                        <td className="py-2.5 px-5 text-xs text-[var(--muted)]">{tx.note || "—"}</td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useStore } from "@/lib/useStore";
 import {
   Card,
   CardHeader,
@@ -19,38 +21,15 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-/* ===== Mock Data ===== */
-const stats = [
-  {
-    label: "Total Revenue",
-    value: "Rp 12.4M",
-    change: "+12.5%",
-    trend: "up" as const,
-    icon: DollarSign,
-  },
-  {
-    label: "Orders",
-    value: "284",
-    change: "+8.2%",
-    trend: "up" as const,
-    icon: ShoppingCart,
-  },
-  {
-    label: "Customers",
-    value: "1,429",
-    change: "+3.1%",
-    trend: "up" as const,
-    icon: Users,
-  },
-  {
-    label: "Avg. Rating",
-    value: "4.6",
-    change: "-0.2",
-    trend: "down" as const,
-    icon: Star,
-  },
-];
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(amount);
+}
 
+/* ===== Mock Data ===== */
 const recentReviews = [
   {
     id: 1,
@@ -93,6 +72,43 @@ const sentimentMap = {
 };
 
 export default function DashboardPage() {
+  const { dashboardStats, loadDashboardStats } = useStore();
+
+  useEffect(() => {
+    loadDashboardStats();
+  }, [loadDashboardStats]);
+
+  const statsData = [
+    {
+      label: "Total Revenue",
+      value: dashboardStats ? formatCurrency(dashboardStats.total_revenue) : "Rp 0",
+      change: "+12.5%",
+      trend: "up" as const,
+      icon: DollarSign,
+    },
+    {
+      label: "Orders",
+      value: dashboardStats ? String(dashboardStats.orders_count) : "0",
+      change: "+8.2%",
+      trend: "up" as const,
+      icon: ShoppingCart,
+    },
+    {
+      label: "Total Products",
+      value: dashboardStats ? String(dashboardStats.products_count) : "0",
+      change: "+3.1%",
+      trend: "up" as const,
+      icon: Users,
+    },
+    {
+      label: "Avg. Rating",
+      value: dashboardStats ? String(dashboardStats.avg_rating) : "4.6",
+      change: "-0.2",
+      trend: "down" as const,
+      icon: Star,
+    },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* ===== Page Header ===== */}
@@ -105,9 +121,10 @@ export default function DashboardPage() {
 
       {/* ===== Stats Grid ===== */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-children">
-        {stats.map((stat) => (
+        {statsData.map((stat) => (
           <Card key={stat.label} className="group relative overflow-hidden">
             <CardContent className="p-4">
+
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wider">
