@@ -22,3 +22,15 @@ class Transaction(Base):
     quantity = Column(Integer)
     note = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Review(Base):
+    __tablename__ = "reviews"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    customer = Column(String)
+    rating = Column(Integer)
+    text = Column(String)
+    sentiment = Column(String)  # "positive", "neutral", "negative"
+    confidence = Column(Float, default=1.0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
