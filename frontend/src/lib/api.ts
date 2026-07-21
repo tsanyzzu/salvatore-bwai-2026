@@ -76,3 +76,16 @@ export async function simulateSocialPost(data: { platform: string; caption: stri
   return res.json();
 }
 
+export async function fetchTransactions() {
+  const res = await fetch(`${API_URL}/api/inventory/transactions`);
+  if (!res.ok) throw new Error("Failed to fetch transactions");
+  return res.json();
+}
+
+export async function fetchDashboardStats() {
+  const res = await fetch(`${API_URL}/api/analytics/dashboard-stats`);
+  if (!res.ok) throw new Error("Failed to fetch dashboard stats");
+  return res.json();
+}
+
+
