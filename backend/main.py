@@ -7,6 +7,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 import os
 import uvicorn
 import google.generativeai as genai
@@ -56,6 +57,28 @@ class InventoryTransaction(BaseModel):
     type: str  # "in" | "out"
     quantity: int
     note: Optional[str] = None
+
+
+class TransactionResponse(BaseModel):
+    id: int
+    sku: str
+    type: str
+    quantity: int
+    note: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DashboardStatsResponse(BaseModel):
+    total_revenue: float
+    orders_count: int
+    products_count: int
+    inventory_value: float
+    avg_rating: float
+
+
 
 
 class CaptionRequest(BaseModel):
@@ -138,6 +161,14 @@ async def get_inventory_items(db: Session = Depends(get_db)):
     """Get all inventory items from database."""
     items = db.query(models.Item).all()
     return items
+
+
+@app.get("/api/inventory/transactions", response_model=list[TransactionResponse])
+async def get_inventory_transactions(db: Session = Depends(get_db)):
+    """Get all inventory transactions from database, ordered by creation time descending."""
+    transactions = db.query(models.Transaction).order_by(models.Transaction.created_at.desc()).all()
+    return transactions
+
 
 
 @app.post("/api/inventory/transaction")
@@ -375,6 +406,42 @@ async def simulate_post(request: SimulatePostRequest):
 # ===================================================================
 # ENDPOINTS — Analytics (Sentiment Analysis)
 # ===================================================================
+
+@app.get("/api/analytics/dashboard-stats", response_model=DashboardStatsResponse)
+async def get_dashboard_stats(db: Session = Depends(get_db)):
+    """Calculate dashboard metrics dynamically from database."""
+    from sqlalchemy import func
+    
+    # 1. Total Revenue: Sum of (quantity * item.price) for all "out" transactions
+    out_transactions = db.query(models.Transaction).filter(models.Transaction.type == "out").all()
+    total_revenue = 0.0
+    for tx in out_transactions:
+        item = db.query(models.Item).filter(models.Item.sku == tx.sku).first()
+        if item:
+            total_revenue += tx.quantity * item.price
+            
+    # 2. Total Orders: Count of "out" transactions
+    orders_count = len(out_transactions)
+    
+    # 3. Total Products: Count of items
+    products_count = db.query(models.Item).count()
+    
+    # 4. Nilai Inventori: Sum of (stock * price) for all items
+    items = db.query(models.Item).all()
+    inventory_value = sum(item.stock * item.price for item in items)
+    
+    # 5. Avg. Rating: Average of reviews rating
+    avg_rating_val = db.query(func.avg(models.Review.rating)).scalar()
+    avg_rating = float(avg_rating_val) if avg_rating_val is not None else 4.6
+    
+    return DashboardStatsResponse(
+        total_revenue=total_revenue,
+        orders_count=orders_count,
+        products_count=products_count,
+        inventory_value=inventory_value,
+        avg_rating=round(avg_rating, 1)
+    )
+
 
 import pandas as pd
 import io
