@@ -88,4 +88,17 @@ export async function fetchDashboardStats() {
   return res.json();
 }
 
+export async function fetchReviews() {
+  const res = await fetch(`${API_URL}/api/analytics/reviews`);
+  if (!res.ok) throw new Error("Failed to fetch reviews");
+  return res.json();
+}
+
+export async function fetchReviewsSummary() {
+  const res = await fetch(`${API_URL}/api/analytics/summary`);
+  if (!res.ok) throw new Error("Failed to fetch reviews summary");
+  return res.json();
+}
+
+
 
