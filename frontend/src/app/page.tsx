@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/useStore";
+import { uploadReviews } from "@/lib/api";
 import {
   Card,
   CardHeader,
@@ -19,6 +20,8 @@ import {
   DollarSign,
   Users,
   ArrowUpRight,
+  RefreshCw,
+  Sparkles,
 } from "lucide-react";
 
 function formatCurrency(amount: number) {
@@ -29,42 +32,6 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-/* ===== Mock Data ===== */
-const recentReviews = [
-  {
-    id: 1,
-    customer: "Budi S.",
-    rating: 5,
-    text: "Produk sangat berkualitas, pengiriman cepat!",
-    sentiment: "positive" as const,
-    date: "2 jam lalu",
-  },
-  {
-    id: 2,
-    customer: "Ani R.",
-    rating: 4,
-    text: "Barangnya bagus tapi packaging bisa lebih baik.",
-    sentiment: "neutral" as const,
-    date: "5 jam lalu",
-  },
-  {
-    id: 3,
-    customer: "Dedi W.",
-    rating: 2,
-    text: "Pengiriman terlambat 3 hari, kecewa.",
-    sentiment: "negative" as const,
-    date: "1 hari lalu",
-  },
-  {
-    id: 4,
-    customer: "Siti N.",
-    rating: 5,
-    text: "Repeat order! Selalu puas sama kualitasnya.",
-    sentiment: "positive" as const,
-    date: "1 hari lalu",
-  },
-];
-
 const sentimentMap = {
   positive: { label: "Positif", variant: "success" as const },
   neutral: { label: "Netral", variant: "warning" as const },
@@ -72,11 +39,50 @@ const sentimentMap = {
 };
 
 export default function DashboardPage() {
-  const { dashboardStats, loadDashboardStats } = useStore();
+  const {
+    dashboardStats,
+    reviews,
+    reviewsSummary,
+    loadDashboardStats,
+    loadReviews,
+    loadReviewsSummary,
+  } = useStore();
+
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadDashboardStats();
-  }, [loadDashboardStats]);
+    loadReviews();
+    loadReviewsSummary();
+  }, [loadDashboardStats, loadReviews, loadReviewsSummary]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const res = await uploadReviews(file);
+      if (res.status === "success") {
+        await Promise.all([
+          loadDashboardStats(),
+          loadReviews(),
+          loadReviewsSummary(),
+        ]);
+        alert(res.message || "Ulasan berhasil diunggah!");
+      } else {
+        alert(res.message || "Gagal mengunggah file ulasan");
+      }
+    } catch (err: any) {
+      alert("Terjadi kesalahan saat mengunggah berkas ulasan: " + err.message);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   const statsData = [
     {
@@ -102,15 +108,35 @@ export default function DashboardPage() {
     },
     {
       label: "Avg. Rating",
-      value: dashboardStats ? String(dashboardStats.avg_rating) : "4.6",
-      change: "-0.2",
-      trend: "down" as const,
+      value: reviewsSummary
+        ? String(reviewsSummary.avg_rating)
+        : dashboardStats
+        ? String(dashboardStats.avg_rating)
+        : "4.6",
+      change: "+0.1",
+      trend: "up" as const,
       icon: Star,
     },
   ];
 
+  const posPct = reviewsSummary ? reviewsSummary.positive_pct : 68;
+  const neuPct = reviewsSummary ? reviewsSummary.neutral_pct : 22;
+  const negPct = reviewsSummary ? reviewsSummary.negative_pct : 10;
+  const aiInsight = reviewsSummary
+    ? reviewsSummary.ai_insight
+    : "Sentimen positif mencapai 68%. Pelanggan paling puas dengan kualitas produk.";
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept=".csv,.xls,.xlsx"
+        className="hidden"
+      />
+
       {/* ===== Page Header ===== */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -124,7 +150,6 @@ export default function DashboardPage() {
         {statsData.map((stat) => (
           <Card key={stat.label} className="group relative overflow-hidden">
             <CardContent className="p-4">
-
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs text-[var(--muted)] font-medium uppercase tracking-wider">
@@ -176,53 +201,87 @@ export default function DashboardPage() {
                   Analisis sentimen otomatis dari review pelanggan
                 </CardDescription>
               </div>
-              <Button variant="secondary" size="sm">
-                Upload CSV
-                <ArrowUpRight className="h-3.5 w-3.5" />
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={isUploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {isUploading ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    Menganalisis...
+                  </>
+                ) : (
+                  <>
+                    Upload CSV
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </>
+                )}
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {recentReviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="flex items-start gap-3 p-3 rounded-[var(--radius-md)] border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors"
-                >
-                  {/* Avatar placeholder */}
-                  <div className="h-9 w-9 shrink-0 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
-                    {review.customer.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium">
-                        {review.customer}
-                      </span>
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-3 w-3 ${
-                              i < review.rating
-                                ? "text-amber-400 fill-amber-400"
-                                : "text-[var(--border)]"
-                            }`}
-                          />
-                        ))}
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {reviews.length === 0 ? (
+                <p className="text-sm text-[var(--muted)] text-center py-8">
+                  Belum ada review tersimpan. Unggah CSV ulasan untuk memulai.
+                </p>
+              ) : (
+                reviews.map((review) => {
+                  const sentConfig =
+                    sentimentMap[review.sentiment] || sentimentMap.neutral;
+
+                  return (
+                    <div
+                      key={review.id}
+                      className="flex items-start gap-3 p-3 rounded-[var(--radius-md)] border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors"
+                    >
+                      {/* Avatar placeholder */}
+                      <div className="h-9 w-9 shrink-0 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
+                        {review.customer.charAt(0).toUpperCase()}
                       </div>
-                      <Badge variant={sentimentMap[review.sentiment].variant}>
-                        {sentimentMap[review.sentiment].label}
-                      </Badge>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium">
+                            {review.customer}
+                          </span>
+                          <div className="flex items-center gap-0.5">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-3 w-3 ${
+                                  i < review.rating
+                                    ? "text-amber-400 fill-amber-400"
+                                    : "text-[var(--border)]"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <Badge variant={sentConfig.variant}>
+                            {sentConfig.label}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-[var(--muted)] mt-1 line-clamp-2">
+                          {review.text}
+                        </p>
+                        <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
+                          {new Date(review.created_at).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm text-[var(--muted)] mt-1 line-clamp-2">
-                      {review.text}
-                    </p>
-                    <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
-                      {review.date}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
@@ -231,15 +290,15 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Sentimen Overview</CardTitle>
-            <CardDescription>Distribusi sentimen 30 hari terakhir</CardDescription>
+            <CardDescription>Distribusi sentimen ulasan pelanggan</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {/* Sentiment Bars */}
               {[
-                { label: "Positif", value: 68, color: "var(--success)" },
-                { label: "Netral", value: 22, color: "var(--warning)" },
-                { label: "Negatif", value: 10, color: "var(--danger)" },
+                { label: "Positif", value: posPct, color: "var(--success)" },
+                { label: "Netral", value: neuPct, color: "var(--warning)" },
+                { label: "Negatif", value: negPct, color: "var(--danger)" },
               ].map((item) => (
                 <div key={item.label} className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
@@ -259,13 +318,13 @@ export default function DashboardPage() {
               ))}
 
               {/* Quick Insight */}
-              <div className="mt-6 p-3 rounded-[var(--radius-md)] bg-[var(--success)]/5 border border-[var(--success)]/20">
-                <p className="text-xs font-medium text-[var(--success)]">
-                  📈 Insight
-                </p>
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  Sentimen positif naik 5% dibanding bulan lalu. Pelanggan paling
-                  puas dengan kualitas produk.
+              <div className="mt-6 p-3 rounded-[var(--radius-md)] bg-[var(--primary)]/5 border border-[var(--primary)]/20">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)]">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>AI Business Insight</span>
+                </div>
+                <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">
+                  {aiInsight}
                 </p>
               </div>
             </div>
@@ -275,3 +334,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
