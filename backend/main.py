@@ -552,10 +552,10 @@ import pandas as pd
 import io
 
 @app.post("/api/analytics/upload-reviews")
-async def upload_reviews(file: UploadFile = File(...)):
+async def upload_reviews(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
-    Upload a CSV/Excel file of customer reviews for sentiment analysis.
-    Uses pandas for parsing and a simple heuristic for sentiment (in MVP).
+    Upload a CSV/Excel file of customer reviews, perform sentiment analysis (via Gemini LLM or heuristic),
+    and persist results to database.
     """
     content = await file.read()
     
@@ -567,57 +567,125 @@ async def upload_reviews(file: UploadFile = File(...)):
         else:
             return {"status": "error", "message": "Format file tidak didukung. Gunakan .csv atau .xlsx"}
             
-        # Asumsi kolom review ada di kolom pertama atau bernama 'review'/'ulasan'
+        # Detect review text column
         review_col = None
         for col in df.columns:
-            if col.lower() in ["review", "ulasan", "text", "komentar", "content"]:
+            if str(col).lower() in ["review", "ulasan", "text", "komentar", "content"]:
                 review_col = col
                 break
-        
         if not review_col:
-            review_col = df.columns[0] # Fallback ke kolom pertama
+            review_col = df.columns[0]
             
-        # Basic Sentiment Heuristic (MVP)
-        # TODO: Replace with LLM batch processing for better accuracy
-        positive_words = ["bagus", "mantap", "puas", "cepat", "enak", "keren", "terbaik", "good", "suka"]
-        negative_words = ["jelek", "lama", "kecewa", "kurang", "rusak", "buruk", "bad", "telat", "mahal"]
-        
-        results = []
-        for _, row in df.iterrows():
-            text = str(row[review_col])
-            text_lower = text.lower()
-            
-            pos_score = sum(1 for w in positive_words if w in text_lower)
-            neg_score = sum(1 for w in negative_words if w in text_lower)
-            
-            if pos_score > neg_score:
-                sentiment = "positive"
-            elif neg_score > pos_score:
-                sentiment = "negative"
-            else:
-                sentiment = "neutral"
-                
-            results.append(
-                SentimentResult(
-                    text=text[:100] + "..." if len(text) > 100 else text,
-                    sentiment=sentiment,
-                    confidence=0.8
+        # Detect customer name column
+        customer_col = None
+        for col in df.columns:
+            if str(col).lower() in ["customer", "nama", "name", "pengguna", "user"]:
+                customer_col = col
+                break
+
+        # Detect rating column
+        rating_col = None
+        for col in df.columns:
+            if str(col).lower() in ["rating", "star", "bintang", "score"]:
+                rating_col = col
+                break
+
+        new_reviews = []
+        positive_words = ["bagus", "mantap", "puas", "cepat", "enak", "keren", "terbaik", "good", "suka", "rekomen"]
+        negative_words = ["jelek", "lama", "kecewa", "kurang", "rusak", "buruk", "bad", "telat", "mahal", "parah"]
+
+        # Batch sentiment analysis if Gemini is available
+        llm_results = {}
+        if GEMINI_API_KEY and len(df) > 0:
+            try:
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                sample_texts = [str(row[review_col]) for _, row in df.iterrows()]
+                prompt = (
+                    "Analisis sentimen dari ulasan-ulasan berikut:\n"
+                    + "\n".join([f"{idx+1}. {txt}" for idx, txt in enumerate(sample_texts[:20])])
+                    + "\n\nHasilkan output JSON array valid berisi objek dengan format:\n"
+                    '{"id": index_angka, "sentiment": "positive"|"neutral"|"negative", "rating": 1-5, "confidence": 0.0-1.0}\n'
+                    "Hanya kembalikan JSON valid tanpa markdown wrappers."
                 )
+                resp = model.generate_content(prompt)
+                raw_text = resp.text.strip()
+                if raw_text.startswith("```json"):
+                    raw_text = raw_text[7:]
+                if raw_text.endswith("```"):
+                    raw_text = raw_text[:-3]
+                raw_text = raw_text.strip()
+                parsed_json = json.loads(raw_text)
+                for item in parsed_json:
+                    llm_results[item.get("id")] = item
+            except Exception as gemini_err:
+                print(f"Gemini sentiment batch error: {gemini_err}")
+
+        for idx, row in df.iterrows():
+            text_val = str(row[review_col]).strip()
+            cust_name = str(row[customer_col]).strip() if customer_col else f"Pelanggan #{idx+1}"
+            
+            # Default rating
+            if rating_col and pd.notna(row[rating_col]):
+                try:
+                    rating_val = int(float(row[rating_col]))
+                except ValueError:
+                    rating_val = 5
+            else:
+                rating_val = None
+
+            # Sentiment calculation
+            item_id = idx + 1
+            if item_id in llm_results:
+                sentiment = llm_results[item_id].get("sentiment", "neutral")
+                confidence = float(llm_results[item_id].get("confidence", 0.9))
+                if rating_val is None:
+                    rating_val = int(llm_results[item_id].get("rating", 5 if sentiment == "positive" else (3 if sentiment == "neutral" else 1)))
+            else:
+                # Heuristic fallback
+                text_lower = text_val.lower()
+                pos_score = sum(1 for w in positive_words if w in text_lower)
+                neg_score = sum(1 for w in negative_words if w in text_lower)
+                
+                if pos_score > neg_score:
+                    sentiment = "positive"
+                    confidence = 0.85
+                    if rating_val is None: rating_val = 5
+                elif neg_score > pos_score:
+                    sentiment = "negative"
+                    confidence = 0.85
+                    if rating_val is None: rating_val = 2
+                else:
+                    sentiment = "neutral"
+                    confidence = 0.75
+                    if rating_val is None: rating_val = 4
+
+            rev_model = models.Review(
+                customer=cust_name,
+                rating=rating_val if rating_val else 5,
+                text=text_val,
+                sentiment=sentiment,
+                confidence=confidence
             )
+            new_reviews.append(rev_model)
+
+        if new_reviews:
+            db.add_all(new_reviews)
+            db.commit()
 
         return {
             "status": "success",
-            "total_reviews": len(results),
-            "results": results,
+            "message": f"Berhasil mengunggah dan menganalisis {len(new_reviews)} ulasan baru!",
+            "total_reviews": len(new_reviews),
             "summary": {
-                "positive": sum(1 for r in results if r.sentiment == "positive"),
-                "neutral": sum(1 for r in results if r.sentiment == "neutral"),
-                "negative": sum(1 for r in results if r.sentiment == "negative"),
+                "positive": sum(1 for r in new_reviews if r.sentiment == "positive"),
+                "neutral": sum(1 for r in new_reviews if r.sentiment == "neutral"),
+                "negative": sum(1 for r in new_reviews if r.sentiment == "negative"),
             },
         }
         
     except Exception as e:
         return {"status": "error", "message": f"Gagal memproses file: {str(e)}"}
+
 
 
 @app.get("/api/health")
