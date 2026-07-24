@@ -127,6 +127,31 @@ class SentimentResult(BaseModel):
     confidence: float
 
 
+class ReviewResponse(BaseModel):
+    id: int
+    customer: str
+    rating: int
+    text: str
+    sentiment: str
+    confidence: float
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ReviewSummaryResponse(BaseModel):
+    total_reviews: int
+    positive_count: int
+    neutral_count: int
+    negative_count: int
+    positive_pct: float
+    neutral_pct: float
+    negative_pct: float
+    avg_rating: float
+    ai_insight: str
+
+
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from database import engine, Base, get_db
@@ -150,6 +175,18 @@ def on_startup():
         ]
         db.add_all(initial_items)
         db.commit()
+
+    if db.query(models.Review).count() == 0:
+        print("Seeding initial review data...")
+        initial_reviews = [
+            models.Review(customer="Budi S.", rating=5, text="Produk sangat berkualitas, pengiriman cepat!", sentiment="positive", confidence=0.95),
+            models.Review(customer="Ani R.", rating=4, text="Barangnya bagus tapi packaging bisa lebih baik.", sentiment="neutral", confidence=0.85),
+            models.Review(customer="Dedi W.", rating=2, text="Pengiriman terlambat 3 hari, kecewa.", sentiment="negative", confidence=0.90),
+            models.Review(customer="Siti N.", rating=5, text="Repeat order! Selalu puas sama kualitasnya.", sentiment="positive", confidence=0.98),
+        ]
+        db.add_all(initial_reviews)
+        db.commit()
+
 
 
 # ===================================================================
@@ -441,6 +478,74 @@ async def get_dashboard_stats(db: Session = Depends(get_db)):
         inventory_value=inventory_value,
         avg_rating=round(avg_rating, 1)
     )
+
+
+@app.get("/api/analytics/reviews", response_model=list[ReviewResponse])
+async def get_reviews(db: Session = Depends(get_db)):
+    """Get all saved customer reviews from database."""
+    reviews = db.query(models.Review).order_by(models.Review.created_at.desc()).all()
+    return reviews
+
+
+@app.get("/api/analytics/summary", response_model=ReviewSummaryResponse)
+async def get_reviews_summary(db: Session = Depends(get_db)):
+    """Get sentiment summary stats, distribution, and AI insights from database reviews."""
+    from sqlalchemy import func
+    reviews = db.query(models.Review).all()
+    total = len(reviews)
+    
+    if total == 0:
+        return ReviewSummaryResponse(
+            total_reviews=0,
+            positive_count=0,
+            neutral_count=0,
+            negative_count=0,
+            positive_pct=0,
+            neutral_pct=0,
+            negative_pct=0,
+            avg_rating=0.0,
+            ai_insight="Belum ada ulasan yang tersimpan untuk dianalisis."
+        )
+        
+    pos = sum(1 for r in reviews if r.sentiment == "positive")
+    neu = sum(1 for r in reviews if r.sentiment == "neutral")
+    neg = sum(1 for r in reviews if r.sentiment == "negative")
+    
+    pos_pct = round((pos / total) * 100, 1)
+    neu_pct = round((neu / total) * 100, 1)
+    neg_pct = round((neg / total) * 100, 1)
+    
+    avg_rating_val = db.query(func.avg(models.Review.rating)).scalar()
+    avg_rating = round(float(avg_rating_val), 1) if avg_rating_val is not None else 0.0
+
+    # AI Insight generation
+    ai_insight = f"Sentimen positif mencapai {pos_pct}%. Pelanggan paling puas dengan kualitas produk dan kecepatan pengiriman."
+    if GEMINI_API_KEY:
+        try:
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            review_texts = "\n".join([f"- Rating {r.rating}/5: {r.text}" for r in reviews[:15]])
+            prompt = (
+                f"Berikut adalah beberapa ulasan terbaru pelanggan UMKM:\n{review_texts}\n\n"
+                "Berikan 1-2 kalimat ringkasan wawasan bisnis (AI Insight) dalam Bahasa Indonesia yang menjelaskan poin kepuasan utama dan poin perbaikan jika ada."
+            )
+            resp = model.generate_content(prompt)
+            if resp.text:
+                ai_insight = resp.text.strip()
+        except Exception as e:
+            print(f"Error generating AI insight with Gemini: {e}")
+
+    return ReviewSummaryResponse(
+        total_reviews=total,
+        positive_count=pos,
+        neutral_count=neu,
+        negative_count=neg,
+        positive_pct=pos_pct,
+        neutral_pct=neu_pct,
+        negative_pct=neg_pct,
+        avg_rating=avg_rating,
+        ai_insight=ai_insight
+    )
+
 
 
 import pandas as pd
