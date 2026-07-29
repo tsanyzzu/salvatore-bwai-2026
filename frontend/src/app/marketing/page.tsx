@@ -56,12 +56,33 @@ export default function MarketingPage() {
 
   // Global Interactivity States
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [simulatingId, setSimulatingId] = useState<string | null>(null);
+  const [simulatedPosts, setSimulatedPosts] = useState<string[]>([]);
 
   const handleCopyText = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  const handleSimulatePost = async (id: string, platformName: string, captionText: string) => {
+    setSimulatingId(id);
+    try {
+      const res = await simulateSocialPost({
+        platform: platformName,
+        caption: captionText,
+      });
+      if (res.status === "success") {
+        setSimulatedPosts((prev) => [...prev, id]);
+        alert(res.message);
+      }
+    } catch (err) {
+      alert("Gagal mensimulasikan postingan.");
+    } finally {
+      setSimulatingId(null);
+    }
+  };
+
 
   const handleGenerateCaption = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -328,6 +349,27 @@ export default function MarketingPage() {
                           </>
                         )}
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1"
+                        disabled={simulatingId === `sim-caption-${idx}`}
+                        onClick={() => handleSimulatePost(`sim-caption-${idx}`, item.platform, item.caption)}
+                      >
+                        {simulatingId === `sim-caption-${idx}` ? (
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        ) : simulatedPosts.includes(`sim-caption-${idx}`) ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-emerald-500" />
+                            Tersimulasi
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-3.5 w-3.5" />
+                            Simulasi Post
+                          </>
+                        )}
+                      </Button>
                     </CardFooter>
                   </Card>
                 ))}
@@ -589,6 +631,27 @@ export default function MarketingPage() {
                           <>
                             <Copy className="h-3.5 w-3.5" />
                             Salin Konsep
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1"
+                        disabled={simulatingId === `sim-hook-${idx}`}
+                        onClick={() => handleSimulatePost(`sim-hook-${idx}`, item.platform, item.caption)}
+                      >
+                        {simulatingId === `sim-hook-${idx}` ? (
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        ) : simulatedPosts.includes(`sim-hook-${idx}`) ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-emerald-500" />
+                            Tersimulasi
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-3.5 w-3.5" />
+                            Simulasi Post
                           </>
                         )}
                       </Button>
