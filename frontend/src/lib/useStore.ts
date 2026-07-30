@@ -1,58 +1,22 @@
 import { create } from "zustand";
-import { fetchInventoryItems, fetchTransactions, fetchDashboardStats, fetchReviews, fetchReviewsSummary } from "./api";
-
-interface InventoryItem {
-  id: number;
-  name: string;
-  sku: string;
-  stock: number;
-  min_stock: number;
-  price: number;
-  category: string;
-}
-
-interface Transaction {
-  id: number;
-  sku: string;
-  type: string;
-  quantity: number;
-  note: string | null;
-  created_at: string;
-}
-
-interface DashboardStats {
-  total_revenue: number;
-  orders_count: number;
-  products_count: number;
-  inventory_value: number;
-  avg_rating: number;
-}
-
-interface ReviewItem {
-  id: number;
-  customer: string;
-  rating: number;
-  text: string;
-  sentiment: "positive" | "neutral" | "negative";
-  confidence: number;
-  created_at: string;
-}
-
-interface ReviewsSummary {
-  total_reviews: number;
-  positive_count: number;
-  neutral_count: number;
-  negative_count: number;
-  positive_pct: number;
-  neutral_pct: number;
-  negative_pct: number;
-  avg_rating: number;
-  ai_insight: string;
-}
+import {
+  InventoryItem,
+  TransactionResponse,
+  DashboardStats,
+  ReviewItem,
+  ReviewsSummary,
+} from "@/types/api";
+import {
+  fetchInventoryItems,
+  fetchTransactions,
+  fetchDashboardStats,
+  fetchReviews,
+  fetchReviewsSummary,
+} from "./api";
 
 interface AppState {
   inventory: InventoryItem[];
-  transactions: Transaction[];
+  transactions: TransactionResponse[];
   dashboardStats: DashboardStats | null;
   reviews: ReviewItem[];
   reviewsSummary: ReviewsSummary | null;
@@ -125,10 +89,7 @@ export const useStore = create<AppState>((set, get) => ({
         item.sku === sku ? { ...item, stock: newStock } : item
       ),
     }));
-    // Proactively refresh dashboard stats and transactions if stock changes
     get().loadDashboardStats();
     get().loadTransactions();
   },
 }));
-
-
