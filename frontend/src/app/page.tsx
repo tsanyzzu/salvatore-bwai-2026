@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/useStore";
 import { uploadReviews } from "@/lib/api";
+import { useToast } from "@/components/ui/toast";
 import {
   Card,
   CardHeader,
@@ -39,6 +40,7 @@ const sentimentMap = {
 };
 
 export default function DashboardPage() {
+  const { toast } = useToast();
   const {
     dashboardStats,
     reviews,
@@ -70,12 +72,12 @@ export default function DashboardPage() {
           loadReviews(),
           loadReviewsSummary(),
         ]);
-        alert(res.message || "Ulasan berhasil diunggah!");
+        toast(res.message || "Ulasan berhasil diunggah!", "success");
       } else {
-        alert(res.message || "Gagal mengunggah file ulasan");
+        toast(res.message || "Gagal mengunggah file ulasan", "error");
       }
     } catch (err: any) {
-      alert("Terjadi kesalahan saat mengunggah berkas ulasan: " + err.message);
+      toast("Terjadi kesalahan saat mengunggah berkas ulasan: " + err.message, "error");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

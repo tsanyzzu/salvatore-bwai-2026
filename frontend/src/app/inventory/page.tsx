@@ -26,6 +26,8 @@ import {
 import { useStore } from "@/lib/useStore";
 import { addTransaction } from "@/lib/api";
 
+import { useToast } from "@/components/ui/toast";
+
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -35,6 +37,7 @@ function formatCurrency(amount: number) {
 }
 
 export default function InventoryPage() {
+  const { toast } = useToast();
   const { inventory, transactions, isLoading, loadInventory, loadTransactions, updateStock } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -58,11 +61,12 @@ export default function InventoryPage() {
       });
       if (res.status === "success") {
         updateStock(itemSku, res.new_stock);
+        toast(`Stok berhasil di-update menjadi ${res.new_stock}`, "success");
       } else {
-        alert(res.message);
+        toast(res.message || "Gagal mengubah stok", "error");
       }
-    } catch (err) {
-      alert("Gagal memperbarui stok");
+    } catch (err: any) {
+      toast(err.message || "Gagal memperbarui stok", "error");
     }
   };
 
@@ -75,7 +79,10 @@ export default function InventoryPage() {
 
   const handleTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sku || !type || !qty) return;
+    if (!sku || !type || !qty) {
+      toast("Harap lengkapi semua bidang transaksi", "info");
+      return;
+    }
     
     setIsSubmitting(true);
     try {
@@ -89,11 +96,12 @@ export default function InventoryPage() {
         setSku("");
         setType("");
         setQty("");
+        toast(res.message || "Transaksi berhasil dicatat!", "success");
       } else {
-        alert(res.message);
+        toast(res.message || "Gagal mencatat transaksi", "error");
       }
-    } catch (err) {
-      alert("Gagal menambahkan transaksi");
+    } catch (err: any) {
+      toast(err.message || "Gagal menambahkan transaksi", "error");
     } finally {
       setIsSubmitting(false);
     }
