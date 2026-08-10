@@ -95,3 +95,36 @@ export interface ApiResponse<T = any> {
   data?: T;
   [key: string]: any;
 }
+
+export interface POSCheckoutItem {
+  sku: string;
+  quantity: number;
+}
+
+export interface POSCheckoutPayload {
+  items: POSCheckoutItem[];
+  payment_method: "cash" | "qris";
+  amount_paid: number;
+  note?: string;
+}
+
+export interface POSReceiptItem {
+  name: string;
+  sku: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface POSReceiptResponse {
+  receipt_no: string;
+  created_at: string;
+  items: POSReceiptItem[];
+  total_amount: number;
+  payment_method: string;
+  amount_paid: number;
+  change_amount: number;
+  status: string;
+  message: string;
+}
+

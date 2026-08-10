@@ -11,6 +11,8 @@ import {
   CreativeGenerateRequest,
   CreativeResponse,
   ApiResponse,
+  POSCheckoutPayload,
+  POSReceiptResponse,
 } from "@/types/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -18,6 +20,21 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   const res = await fetch(`${API_URL}/api/inventory/items`);
   if (!res.ok) throw new Error("Gagal mengambil data inventori");
+  return res.json();
+}
+
+export async function checkoutPOS(
+  data: POSCheckoutPayload
+): Promise<POSReceiptResponse> {
+  const res = await fetch(`${API_URL}/api/pos/checkout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Gagal memproses transaksi kasir");
+  }
   return res.json();
 }
 
