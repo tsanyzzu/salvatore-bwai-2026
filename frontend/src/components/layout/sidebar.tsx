@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Package,
   Sparkles,
+  CreditCard,
   Menu,
   X,
   Rocket,
@@ -19,6 +20,12 @@ const navItems = [
     href: "/",
     icon: LayoutDashboard,
     description: "Analytics & Reviews",
+  },
+  {
+    label: "Kasir POS",
+    href: "/pos",
+    icon: CreditCard,
+    description: "Penjualan Cepat",
   },
   {
     label: "Inventory",
