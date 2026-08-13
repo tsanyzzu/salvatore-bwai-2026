@@ -1,99 +1,170 @@
-# 🚀 MikroBoost - Smart UMKM Platform
+# 🚀 MikroBoost — Smart UMKM Platform
 
-MikroBoost adalah platform cerdas *all-in-one* yang dirancang untuk membantu Usaha Mikro, Kecil, dan Menengah (UMKM) dalam mengelola inventaris bisnis operasional sekaligus meningkatkan penjualan melalui alat pemasaran cerdas yang ditenagai oleh Generative AI.
 
-Proyek ini mendigitalisasi cara UMKM bekerja dengan menghemat waktu pengelolaan stok dan memecahkan kebingungan UMKM dalam strategi pemasaran digital mereka.
+**MikroBoost** adalah platform cerdas *all-in-one* yang dirancang untuk memberdayakan Usaha Mikro, Kecil, dan Menengah (UMKM). Platform ini mengintegrasikan kasir digital (*Point of Sale*), manajemen inventori stok barang, analitik laba/rugi keuangan, analisis sentimen ulasan pelanggan, dan studio pemasaran GenAI dalam satu antarmuka yang modern, cepat, dan elegan.
 
-## ✨ Fitur Utama
+---
 
-- **📦 Smart Inventory Management:** Pencatatan, pemantauan batas minimum *(restock alerts)*, dan riwayat transaksi stok barang masuk/keluar.
-- **🤖 GenAI Marketing Tools (Powered by Google Gemini):**
-  - **Magic Captioning:** Hasilkan takarir (caption) menarik secara otomatis untuk platform Instagram, Shopee, atau WhatsApp dengan berbagai penyesuaian nada bahasa (promosional, profesional, dll).
-  - **Trend Analysis:** Analisa tren produk pintar berdasarkan deskripsi barang.
-  - **Creative Content Hooks:** Pembuat hook video kreatif untuk pemasaran di media sosial (TikTok / IG Reels).
-- **📊 Business Dashboard:** Tampilan metrik bisnis seperti total pendapatan, pesanan, dan peninjauan kepuasan produk UMKM secara cepat.
+## ✨ Fitur-Fitur Utama
 
-## 💻 Tech Stack
+### 1. 🛒 Modul Kasir Cepat (Point of Sale / POS Lightweight)
+- **Katalog Produk Grid:** Pencarian cepat nama/SKU dan filter kategori produk.
+- **Keranjang Belanja Interaktif:** Penambahan/pengurangan jumlah pesanan secara *real-time*.
+- **Kalkulator Kembalian:** Pilihan metode pembayaran Tunai & QRIS dengan kalkulator kembalian otomatis dan tombol nominal cepat (Uang Pas, 50k, 100k).
+- **Struk Digital Siap Cetak:** Modal pratinjau invoice struk transaksi yang siap dicetak untuk pelanggan.
 
-**Frontend:**
-- [Next.js 16](https://nextjs.org/) (App Router & React 19)
-- [Tailwind CSS v4](https://tailwindcss.com/)
-- [Zustand](https://zustand-demo.pmnd.rs/) (State Management)
-- UI Components berbasis [shadcn/ui](https://ui.shadcn.com/) (Lucide, Class Variance Authority)
+### 2. 💰 Analitik Keuangan & Estimasi Laba/Rugi (Smart Financials)
+- **Kartu KPI Keuangan:** Omzet Total, Laba Kotor, HPP (COGS), Beban Operasional, dan Laba Bersih.
+- **Breakdown Margin Keuntungan Produk:** Tabel rincian margin profitabilitas per SKU (Rp & %).
+- **Wawasan & Proyeksi Omzet AI:** Estimasi proyeksi omzet bulan depan dan rekomendasi kesehatan keuangan dari Gemini AI.
+- **Filter Rentang Waktu:** Pilihan analisis keuangan (Bulan Ini, 3 Bulan, dan Tahun Ini).
 
-**Backend:**
-- [FastAPI](https://fastapi.tiangolo.com/) (Python)
-- Google Generative AI API (Gemini)
-- SQLAlchemy & PostgreSQL (Database)
-- Pydantic & Uvicorn
+### 3. 📦 Manajemen Inventori & Log Transaksi
+- **Katalog Stok & Low Stock Badge:** Pemantauan jumlah stok dengan indikator stok kritis (*Low Stock Alert*).
+- **Penyesuaian Stok Cepat:** Tombol ubah stok instan (`+` / `-`) dan formulir transaksi manual.
+- **Log Riwayat Transaksi:** Riwayat otomatis transaksi stok masuk (*in*) dan keluar (*out*).
 
-## 📂 Struktur Proyek Terpenting
+### 4. 🤖 AI Marketing Studio (GenAI Powered by Google Gemini)
+- **✨ AI Copywriter:** Generator caption promosi otomatis untuk Instagram, Shopee, atau WhatsApp dengan penyesuaian tone (Engaging, Professional, Friendly, Urgent).
+- **📈 Analisis Tren Pasar:** Rekomendasi taktik konten video viral terkini untuk TikTok, Instagram Reels, dan YouTube Shorts.
+- **🎬 Creative Video Hooks:** Generator storyboard visual video 15 detik (Hook visual, audio, teks layar) dan fitur **Simulasi Post Sosial Media**.
+
+### 5. 📊 Dashboard Utama & Analisis Sentimen Ulasan
+- **Ringkasan KPI Bisnis:** Total Revenue, Jumlah Pesanan, Total Produk, dan Rating Rata-rata.
+- **Upload & Analisis Sentimen Batch:** Pengolahan file CSV/Excel ulasan pelanggan menggunakan Gemini AI untuk mengategorikan ulasan Positif, Netral, dan Negatif.
+- **Kotak AI Business Insight:** Ringkasan otomatis poin kepuasan utama pelanggan.
+
+---
+
+## 💻 Arsitektur & Tech Stack
+
+### **Backend (Python FastAPI - Clean Layered Architecture)**
+- **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.10+)
+- **AI Engine:** `google-generativeai` (Google Gemini 1.5 Flash / Gemini Pro API)
+- **Architecture Layers:**
+  - `schemas/`: Pydantic Models (`inventory.py`, `marketing.py`, `analytics.py`, `pos.py`, `financials.py`)
+  - `services/`: Encapsulated AI Services (`ai_service.py`)
+  - `routers/`: RESTful Modular Routers (`inventory.py`, `marketing.py`, `analytics.py`, `pos.py`)
+- **Database & Data Processing:** SQLAlchemy ORM, SQLite / PostgreSQL, Pandas.
+
+### **Frontend (Next.js 16 - React 19)**
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router & React 19)
+- **Styling:** Vanilla CSS & [Tailwind CSS v4](https://tailwindcss.com/)
+- **State Management:** [Zustand](https://zustand-demo.pmnd.rs/)
+- **Type Safety:** Strict TypeScript Interfaces (`types/api.ts`)
+- **UI Components & Icons:** Lucide React, Toast UI System Reusable Provider (`components/ui/toast.tsx`)
+
+---
+
+## 📂 Struktur Proyek
 
 ```text
 salvatore-bwai-2026/
-├── backend/                  # Layer Services & API
-│   ├── main.py               # Entry point FastAPI & Integrasi GenAI 
-│   ├── models.py             # Schema & Model Database (SQLAlchemy)
-│   ├── database.py           # Koneksi Database
-│   └── requirements.txt      # Dependensi Python
-└── frontend/                 # Aplikasi Web (User Interface)
-    ├── src/app/              # Next.js App Router (Halaman & Rute)
-    │   ├── inventory/        # Manajemen Stok Barang
-    │   ├── marketing/        # Fitur AI Marketing Generator
-    │   └── page.tsx          # Dashboard Utama Analytics
-    ├── src/components/       # Komponen UI Reusable (shadcn/ui)
-    └── src/lib/              # Utilities, API Fetcher, & Zustand Store
+├── backend/                  # Layer Backend FastAPI
+│   ├── main.py               # Application Entrypoint & Middleware
+│   ├── database.py           # Database Session & Engine Setup
+│   ├── models.py             # SQLAlchemy Database Models (Item, Transaction, Review)
+│   ├── schemas/              # Pydantic Schemas (Request/Response Models)
+│   │   ├── inventory.py
+│   │   ├── marketing.py
+│   │   ├── analytics.py
+│   │   ├── pos.py
+│   │   └── financials.py
+│   ├── services/             # Business Logic & Gemini AI Integration
+│   │   └── ai_service.py
+│   ├── routers/              # RESTful API Route Controllers
+│   │   ├── inventory.py
+│   │   ├── marketing.py
+│   │   ├── analytics.py
+│   │   └── pos.py
+│   └── requirements.txt      # Python Dependencies
+└── frontend/                 # Layer Frontend Next.js Web App
+    ├── src/app/              # Next.js App Router Pages
+    │   ├── page.tsx          # Dashboard Analytics & Sentimen Ulasan
+    │   ├── pos/              # Modul Kasir Cepat (POS)
+    │   ├── financials/       # Analitik Keuangan & Laba/Rugi
+    │   ├── inventory/        # Manajemen Stok Inventori
+    │   ├── marketing/        # AI Marketing Studio
+    │   └── layout.tsx        # Root Layout & Toast Provider
+    ├── src/components/       # Reusable UI & Marketing Tab Components
+    │   ├── layout/           # Sidebar Navigation Component
+    │   ├── ui/               # Reusable Cards, Buttons, Inputs, & Toast UI
+    │   └── marketing/        # CopywriterTab, TrendAnalysisTab, CreativeHooksTab
+    ├── src/types/            # Strict TypeScript Interfaces (api.ts)
+    └── src/lib/              # API Fetcher Client & Zustand Store
 ```
 
-## 🛠️ Panduan Instalasi & Menjalankan Aplikasi
+---
 
-### Prasyarat:
-- Node.js (v20+) & npm
+## 🛠️ Panduan Instalasi & Cara Menjalankan
+
+### **Prasyarat System:**
+- Node.js v20+ & npm
 - Python 3.9+
-- PostgreSQL (dikonfigurasi dan berjalan)
-- API Key Google Gemini (Generative AI)
+- API Key Google Gemini (`GEMINI_API_KEY`)
 
-### 1. Menjalankan Backend (FastAPI)
+---
+
+### **1. Menjalankan Backend (FastAPI)**
 
 ```bash
 # Masuk ke direktori backend
 cd backend
 
-# Buat virtual environment agar dependensi terenkapsulasi dengan baik
+# Buat & aktifkan virtual environment
 python -m venv venv
-# Windows: venv\\Scripts\\activate
-# Mac/Linux: source venv/bin/activate
 
-# Instal dependensi
+# Windows (PowerShell / Command Prompt):
+# venv\Scripts\activate
+# Mac/Linux:
+# source venv/bin/activate
+
+# Instal dependensi Python
 pip install -r requirements.txt
 
-# Buat environment variables (Atas/Set API Key Gemini)
-# export GEMINI_API_KEY="AIzaSyYourGeminiApiKeyHere" 
-# (Atau tambahkan file .env)
+# Set Gemini API Key (Opsional: Sistem memiliki fallback engine jika key belum diisi)
+# set GEMINI_API_KEY="your_google_gemini_api_key"
 
-# Jalankan server
+# Menjalankan FastAPI Uvicorn Server
 uvicorn main:app --reload --port 8000
 ```
-*API sekarang dapat diakses secara lokal di http://localhost:8000 (Gunakan `/docs` untuk melihat dokumentasi interaktif Swagger).*
+*API Backend berjalan di `http://localhost:8000`. Swagger Interactive Docs dapat diakses di `http://localhost:8000/docs`.*
 
-### 2. Menjalankan Frontend (Next.js)
+---
+
+### **2. Menjalankan Frontend (Next.js)**
 
 ```bash
-# Buka tab terminal baru, pautkan ke frotend
+# Buka terminal baru, masuk ke direktori frontend
 cd frontend
 
 # Instal dependensi NPM
 npm install
 
-# Jalankan server website web platform
+# Menjalankan Dev Server Next.js
 npm run dev
 ```
-*Aplikasi frontend web sekarang dapat diakses secara lokal di http://localhost:3000.*
-
-## 🚀 Future Roadmap & Inovasi
-- Mengembangkan agen sub-sistem (Agentic Workflow) untuk otomatis menjawab *review* pengguna.
-- Sinkronisasi harga dan stok *multi-channel* otomatis ke marketplace E-Commerce sungguhan.
-- Pengembangan PWA mobile application agar UMKM mudah mengakses via Smartphone.
+*Aplikasi Web Frontend dapat diakses di `http://localhost:3000`.*
 
 ---
-*Dibangun untuk memajukan UMKM oleh tim Anda.*
+
+## 🌐 Dokumentasi API Swagger
+
+Setelah Backend berjalan, buka peramban dan kunjungi:
+👉 `http://localhost:8000/docs`
+
+Dokumentasi interaktif OpenAPI/Swagger akan menampilkan seluruh rute endpoint:
+- **Inventory:** `GET /api/inventory/items`, `GET /api/inventory/transactions`, `POST /api/inventory/transaction`
+- **Point of Sale (POS):** `POST /api/pos/checkout`
+- **Analytics & Financials:** `GET /api/analytics/dashboard-stats`, `GET /api/analytics/financial-summary`, `GET /api/analytics/reviews`, `GET /api/analytics/summary`, `POST /api/analytics/upload-reviews`
+- **Marketing GenAI:** `POST /api/marketing/generate`, `POST /api/marketing/analyze-trends`, `POST /api/marketing/generate-creative`, `POST /api/marketing/simulate-post`
+
+---
+
+## 👥 Pengembang & Lisensi
+
+Proyek ini dikembangkan oleh tim **Salvatore** sebagai karya eksperimen dalam program **Build with AI by GDGoC Jabodetabek**.
+
+> **💡 Eksperimen Vibe-Coding:**
+> Proyek **MikroBoost** ini dikembangkan sebagai eksperimen inovasi pada program **Build with AI** yang diselenggarakan oleh **GDGoC Jabodetabek**.
+> Seluruh proses pengerjaan (analisis kebutuhan, arsitektur *Clean Layered*, penulisan kode frontend/backend, hingga refactoring) murni memanfaatkan metode **"Vibe-Coding"** secara interaktif menggunakan teknologi Google modern, yaitu **Antigravity AI Agentic Assistant** dan model AI **Google Gemini (Gemini Pro 3.1)**.
