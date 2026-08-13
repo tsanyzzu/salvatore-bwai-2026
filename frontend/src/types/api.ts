@@ -128,3 +128,35 @@ export interface POSReceiptResponse {
   message: string;
 }
 
+export interface ProductMarginItem {
+  sku: string;
+  name: string;
+  price: number;
+  estimated_cost: number;
+  margin_amount: number;
+  margin_pct: number;
+  units_sold: number;
+}
+
+export interface MonthlyFinancialTrend {
+  month: string;
+  revenue: number;
+  gross_profit: number;
+  net_profit: number;
+}
+
+export interface FinancialSummary {
+  total_revenue: number;
+  total_cogs: number;
+  gross_profit: number;
+  operating_expenses: number;
+  net_profit: number;
+  profit_margin_pct: number;
+  revenue_forecast_next_month: number;
+  financial_health_status: string;
+  ai_financial_insight: string;
+  monthly_trends: MonthlyFinancialTrend[];
+  product_margins: ProductMarginItem[];
+}
+
+

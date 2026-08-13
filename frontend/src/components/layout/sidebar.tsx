@@ -9,6 +9,7 @@ import {
   Package,
   Sparkles,
   CreditCard,
+  DollarSign,
   Menu,
   X,
   Rocket,
@@ -26,6 +27,12 @@ const navItems = [
     href: "/pos",
     icon: CreditCard,
     description: "Penjualan Cepat",
+  },
+  {
+    label: "Keuangan",
+    href: "/financials",
+    icon: DollarSign,
+    description: "Laba & Margin",
   },
   {
     label: "Inventory",

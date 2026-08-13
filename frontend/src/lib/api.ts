@@ -13,6 +13,7 @@ import {
   ApiResponse,
   POSCheckoutPayload,
   POSReceiptResponse,
+  FinancialSummary,
 } from "@/types/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -20,6 +21,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   const res = await fetch(`${API_URL}/api/inventory/items`);
   if (!res.ok) throw new Error("Gagal mengambil data inventori");
+  return res.json();
+}
+
+export async function fetchFinancialSummary(): Promise<FinancialSummary> {
+  const res = await fetch(`${API_URL}/api/analytics/financial-summary`);
+  if (!res.ok) throw new Error("Gagal mengambil ringkasan keuangan");
   return res.json();
 }
 
