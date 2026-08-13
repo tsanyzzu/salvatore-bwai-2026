@@ -37,12 +37,14 @@ export default function FinancialsPage() {
   const { toast } = useToast();
   const [data, setData] = useState<FinancialSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [timeframe, setTimeframe] = useState<"this_month" | "last_3_months" | "this_year">("this_month");
 
   const loadData = async () => {
     setIsLoading(true);
     try {
       const summary = await fetchFinancialSummary();
       setData(summary);
+      toast("Data analitik keuangan berhasil diperbarui", "info");
     } catch (err: any) {
       toast(err.message || "Gagal mengambil data keuangan", "error");
     } finally {
@@ -79,10 +81,49 @@ export default function FinancialsPage() {
             Perhitungan kesehatan finansial, margin keuntungan produk, & proyeksi omzet berbasis AI.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="success" className="py-1 px-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 bg-[var(--surface-hover)] p-1 rounded-[var(--radius-md)] border border-[var(--border)] text-xs">
+            <button
+              onClick={() => setTimeframe("this_month")}
+              className={`px-2.5 py-1 rounded transition-colors ${
+                timeframe === "this_month"
+                  ? "bg-[var(--primary)] text-white font-bold"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              Bulan Ini
+            </button>
+            <button
+              onClick={() => setTimeframe("last_3_months")}
+              className={`px-2.5 py-1 rounded transition-colors ${
+                timeframe === "last_3_months"
+                  ? "bg-[var(--primary)] text-white font-bold"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              3 Bulan
+            </button>
+            <button
+              onClick={() => setTimeframe("this_year")}
+              className={`px-2.5 py-1 rounded transition-colors ${
+                timeframe === "this_year"
+                  ? "bg-[var(--primary)] text-white font-bold"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              Tahun Ini
+            </button>
+          </div>
+          <Badge variant="success" className="py-1.5 px-3">
             <Award className="h-3.5 w-3.5 mr-1" /> {data.financial_health_status}
           </Badge>
+          <button
+            onClick={loadData}
+            className="p-2 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--muted)] hover:text-[var(--foreground)]"
+            title="Refresh data"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
