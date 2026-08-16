@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Card,
   CardHeader,
@@ -22,6 +23,7 @@ import {
   ArrowUpCircle,
   AlertTriangle,
   RefreshCw,
+  Truck,
 } from "lucide-react";
 import { useStore } from "@/lib/useStore";
 import { addTransaction } from "@/lib/api";
@@ -192,6 +194,29 @@ export default function InventoryPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ===== Auto Restock EOQ Alert Banner ===== */}
+      {lowStockCount > 0 && (
+        <div className="p-4 rounded-[var(--radius-md)] bg-amber-950/40 border border-amber-800 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-[var(--radius-md)] bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm">Peringatan Restok Otomatis (EOQ Engine)</p>
+              <p className="text-xs text-amber-300/80">
+                Ada {lowStockCount} produk yang telah menyentuh batas stok kritis. Dapatkan rekomendasi pesanan & kontak supplier terintegrasi.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/suppliers"
+            className="px-3.5 py-1.5 rounded-[var(--radius-md)] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors whitespace-nowrap"
+          >
+            <Truck className="h-3.5 w-3.5" /> Lihat Rekomendasi Restok
+          </Link>
+        </div>
+      )}
 
       {/* ===== Add Transaction Form ===== */}
       <Card id="transaction-form-card">
