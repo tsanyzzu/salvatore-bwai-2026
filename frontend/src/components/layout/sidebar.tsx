@@ -10,6 +10,7 @@ import {
   Sparkles,
   CreditCard,
   DollarSign,
+  Truck,
   Menu,
   X,
   Rocket,
@@ -39,6 +40,12 @@ const navItems = [
     href: "/inventory",
     icon: Package,
     description: "Cashflow & Stock",
+  },
+  {
+    label: "Pemasok & Restok",
+    href: "/suppliers",
+    icon: Truck,
+    description: "Supplier & EOQ",
   },
   {
     label: "Marketing",

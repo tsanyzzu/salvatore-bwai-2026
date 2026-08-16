@@ -14,6 +14,9 @@ import {
   POSCheckoutPayload,
   POSReceiptResponse,
   FinancialSummary,
+  SupplierItem,
+  SupplierCreatePayload,
+  RestokRecommendationItem,
 } from "@/types/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -21,6 +24,33 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   const res = await fetch(`${API_URL}/api/inventory/items`);
   if (!res.ok) throw new Error("Gagal mengambil data inventori");
+  return res.json();
+}
+
+export async function fetchSuppliers(): Promise<SupplierItem[]> {
+  const res = await fetch(`${API_URL}/api/suppliers`);
+  if (!res.ok) throw new Error("Gagal mengambil daftar supplier");
+  return res.json();
+}
+
+export async function createSupplier(
+  data: SupplierCreatePayload
+): Promise<SupplierItem> {
+  const res = await fetch(`${API_URL}/api/suppliers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Gagal membuat supplier baru");
+  }
+  return res.json();
+}
+
+export async function fetchRestockRecommendations(): Promise<RestokRecommendationItem[]> {
+  const res = await fetch(`${API_URL}/api/suppliers/restock-recommendations`);
+  if (!res.ok) throw new Error("Gagal mengambil rekomendasi restok");
   return res.json();
 }
 

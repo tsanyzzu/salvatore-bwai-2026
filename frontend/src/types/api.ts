@@ -159,4 +159,40 @@ export interface FinancialSummary {
   product_margins: ProductMarginItem[];
 }
 
+export interface SupplierItem {
+  id: number;
+  name: string;
+  contact_person: string;
+  phone: string;
+  email: string | null;
+  category: string;
+  address: string | null;
+  lead_time_days: number;
+  created_at: string;
+}
+
+export interface SupplierCreatePayload {
+  name: string;
+  contact_person: string;
+  phone: string;
+  email?: string;
+  category: string;
+  address?: string;
+  lead_time_days: number;
+}
+
+export interface RestokRecommendationItem {
+  sku: string;
+  product_name: string;
+  current_stock: number;
+  min_stock: number;
+  category: string;
+  recommended_reorder_qty: number;
+  suggested_supplier: string;
+  supplier_phone: string;
+  lead_time_days: number;
+  urgency_level: "KRITIS" | "PERLU_RESTOK";
+}
+
+
 
