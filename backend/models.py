@@ -34,3 +34,17 @@ class Review(Base):
     confidence = Column(Float, default=1.0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class Supplier(Base):
+    __tablename__ = "suppliers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    contact_person = Column(String)
+    phone = Column(String)
+    email = Column(String, nullable=True)
+    category = Column(String)
+    address = Column(String, nullable=True)
+    lead_time_days = Column(Integer, default=3)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+

@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, Base, get_db
 import models
-from routers import inventory, marketing, analytics, pos
+from routers import inventory, marketing, analytics, pos, suppliers
 
 # ===== App Initialization =====
 app = FastAPI(
@@ -37,6 +37,7 @@ app.include_router(inventory.router)
 app.include_router(marketing.router)
 app.include_router(analytics.router)
 app.include_router(pos.router)
+app.include_router(suppliers.router)
 
 # ===== Database Init & Seeding =====
 @app.on_event("startup")
@@ -64,6 +65,17 @@ def on_startup():
         ]
         db.add_all(initial_reviews)
         db.commit()
+
+    if db.query(models.Supplier).count() == 0:
+        print("Seeding initial supplier data...")
+        initial_suppliers = [
+            models.Supplier(name="PT Kopi Nusantara Jaya", contact_person="Hendra Suwito", phone="0812-9988-7766", email="order@kopinusantara.co.id", category="Kopi", address="Bandung, Jawa Barat", lead_time_days=2),
+            models.Supplier(name="CV Bahan Organik Berkah", contact_person="Rina Melati", phone="0856-4433-2211", email="sales@bahanorganik.id", category="Bahan", address="Bogor, Jawa Barat", lead_time_days=3),
+            models.Supplier(name="UD Eco Merchandise", contact_person="Bambang Purwanto", phone="0813-1122-3344", email="info@ecomerch.com", category="Merchandise", address="Surabaya, Jawa Timur", lead_time_days=4),
+        ]
+        db.add_all(initial_suppliers)
+        db.commit()
+
 
 @app.get("/api/health", tags=["Health Check"])
 async def health_check():
