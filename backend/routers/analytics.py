@@ -17,9 +17,33 @@ from schemas.financials import (
     ProductMarginItem,
     MonthlyFinancialTrend,
 )
+from schemas.report import ReportExportRequest, ReportExportResponse
 from services.ai_service import AIService
+from services.report_service import ReportService
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
+
+@router.post("/export-report", response_model=ReportExportResponse)
+async def export_report(request: ReportExportRequest, db: Session = Depends(get_db)):
+    """Generate and return official UMKM report (PDF, Excel, or CSV format)."""
+    try:
+        filename, b64_content, content_type = ReportService.generate_report(
+            db=db,
+            report_type=request.report_type,
+            export_format=request.format
+        )
+        return ReportExportResponse(
+            filename=filename,
+            file_content_base64=b64_content,
+            content_type=content_type,
+            message=f"Laporan {request.report_type.capitalize()} ({request.format.upper()}) berhasil dibuat!",
+            status="success"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Gagal membuat berkas laporan: {str(e)}"
+        )
 
 @router.get("/financial-summary", response_model=FinancialSummaryResponse)
 async def get_financial_summary(db: Session = Depends(get_db)):

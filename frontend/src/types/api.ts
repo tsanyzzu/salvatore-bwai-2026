@@ -194,5 +194,20 @@ export interface RestokRecommendationItem {
   urgency_level: "KRITIS" | "PERLU_RESTOK";
 }
 
+export interface ReportExportRequest {
+  report_type: "financial" | "inventory" | "reviews";
+  format: "pdf" | "excel" | "csv";
+  timeframe?: string;
+}
+
+export interface ReportExportResponse {
+  filename: string;
+  file_content_base64: string;
+  content_type: string;
+  message: string;
+  status: string;
+}
+
+
 
 
