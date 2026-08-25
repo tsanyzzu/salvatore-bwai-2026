@@ -177,11 +177,11 @@ export function ReviewReplyModal({
         </div>
 
         {/* Actions */}
-        <div className="pt-2 flex gap-2">
+        <div className="pt-2 flex flex-col sm:flex-row gap-2">
           <Button
             type="button"
             variant="secondary"
-            className="flex-1"
+            className="sm:w-1/3"
             onClick={onClose}
           >
             Tutup
@@ -195,11 +195,11 @@ export function ReviewReplyModal({
           >
             {isCopied ? (
               <>
-                <Check className="h-4 w-4 mr-1 text-emerald-400" /> Tersalin!
+                <Check className="h-4 w-4 mr-1 text-emerald-400" /> Tersalin ke Clipboard!
               </>
             ) : (
               <>
-                <Copy className="h-4 w-4 mr-1" /> Salin Balasan
+                <Copy className="h-4 w-4 mr-1" /> Salin Balasan (1-Click)
               </>
             )}
           </Button>
