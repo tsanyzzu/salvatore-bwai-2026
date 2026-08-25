@@ -23,7 +23,13 @@ import {
   ArrowUpRight,
   RefreshCw,
   Sparkles,
+  Download,
+  Building2,
+  MessageSquare,
+  CheckCircle2,
 } from "lucide-react";
+import { ReportExportModal } from "@/components/ui/ReportExportModal";
+import { ReviewReplyModal } from "@/components/ui/ReviewReplyModal";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -51,6 +57,9 @@ export default function DashboardPage() {
   } = useStore();
 
   const [isUploading, setIsUploading] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [selectedReviewForReply, setSelectedReviewForReply] = useState<any>(null);
+  const [repliedReviewIds, setRepliedReviewIds] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -130,6 +139,24 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Report Export Modal */}
+      <ReportExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        defaultReportType="financial"
+      />
+
+      {/* Review Reply Modal */}
+      <ReviewReplyModal
+        isOpen={!!selectedReviewForReply}
+        onClose={() => setSelectedReviewForReply(null)}
+        review={selectedReviewForReply}
+        onRepliedSuccess={(id) => {
+          if (!repliedReviewIds.includes(id)) {
+            setRepliedReviewIds((prev) => [...prev, id]);
+          }
+        }}
+      />
       {/* Hidden File Input */}
       <input
         type="file"
@@ -267,18 +294,32 @@ export default function DashboardPage() {
                         <p className="text-sm text-[var(--muted)] mt-1 line-clamp-2">
                           {review.text}
                         </p>
-                        <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
-                          {new Date(review.created_at).toLocaleDateString(
-                            "id-ID",
-                            {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
+                        <div className="flex items-center justify-between mt-2 pt-1 border-t border-[var(--border)] text-[10px]">
+                          <span className="text-[var(--muted-foreground)]">
+                            {new Date(review.created_at).toLocaleDateString(
+                              "id-ID",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </span>
+                          {repliedReviewIds.includes(review.id) ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
+                              <CheckCircle2 className="h-3 w-3" /> Telah Dibalas
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => setSelectedReviewForReply(review)}
+                              className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-semibold"
+                            >
+                              <MessageSquare className="h-3 w-3" /> Balas dengan AI
+                            </button>
                           )}
-                        </p>
+                        </div>
                       </div>
                     </div>
                   );

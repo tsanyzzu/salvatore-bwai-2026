@@ -17,6 +17,10 @@ import {
   SupplierItem,
   SupplierCreatePayload,
   RestokRecommendationItem,
+  ReportExportRequest,
+  ReportExportResponse,
+  ReviewReplyRequest,
+  ReviewReplyResponse,
 } from "@/types/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -24,6 +28,36 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   const res = await fetch(`${API_URL}/api/inventory/items`);
   if (!res.ok) throw new Error("Gagal mengambil data inventori");
+  return res.json();
+}
+
+export async function generateReviewReply(
+  data: ReviewReplyRequest
+): Promise<ReviewReplyResponse> {
+  const res = await fetch(`${API_URL}/api/analytics/reply-review`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Gagal membuat balasan ulasan AI");
+  }
+  return res.json();
+}
+
+export async function exportReport(
+  data: ReportExportRequest
+): Promise<ReportExportResponse> {
+  const res = await fetch(`${API_URL}/api/analytics/export-report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Gagal mengekspor laporan");
+  }
   return res.json();
 }
 

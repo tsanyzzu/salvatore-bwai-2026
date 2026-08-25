@@ -181,6 +181,34 @@ export interface SupplierCreatePayload {
   lead_time_days: number;
 }
 
+export interface ReportExportRequest {
+  report_type: "financial" | "inventory" | "reviews";
+  format: "pdf" | "excel" | "csv";
+  timeframe?: string;
+}
+
+export interface ReportExportResponse {
+  filename: string;
+  file_content_base64: string;
+  content_type: string;
+  message: string;
+  status: string;
+}
+
+export interface ReviewReplyRequest {
+  customer_name: string;
+  rating: number;
+  review_text: string;
+  sentiment: string;
+  tone?: string;
+}
+
+export interface ReviewReplyResponse {
+  suggested_reply: string;
+  tone: string;
+  status: string;
+}
+
 export interface RestokRecommendationItem {
   sku: string;
   product_name: string;
