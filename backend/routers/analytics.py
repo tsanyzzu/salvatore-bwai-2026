@@ -19,26 +19,11 @@ from schemas.financials import (
 )
 from schemas.report import ReportExportRequest, ReportExportResponse
 from schemas.review_reply import ReviewReplyRequest, ReviewReplyResponse
+from schemas.report import ReportExportRequest, ReportExportResponse
 from services.ai_service import AIService
 from services.report_service import ReportService
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
-
-@router.post("/reply-review", response_model=ReviewReplyResponse)
-async def reply_review(request: ReviewReplyRequest):
-    """Generate AI customer support response for a customer review."""
-    suggested_reply = AIService.generate_review_reply(
-        customer_name=request.customer_name,
-        rating=request.rating,
-        review_text=request.review_text,
-        sentiment=request.sentiment,
-        tone=request.tone or "friendly"
-    )
-    return ReviewReplyResponse(
-        suggested_reply=suggested_reply,
-        tone=request.tone or "friendly",
-        status="success"
-    )
 
 @router.get("/financial-summary", response_model=FinancialSummaryResponse)
 async def get_financial_summary(db: Session = Depends(get_db)):

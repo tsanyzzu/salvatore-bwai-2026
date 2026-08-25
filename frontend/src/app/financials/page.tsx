@@ -23,7 +23,10 @@ import {
   Award,
   BarChart3,
   Layers,
+  Download,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ReportExportModal } from "@/components/ui/ReportExportModal";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -38,6 +41,7 @@ export default function FinancialsPage() {
   const [data, setData] = useState<FinancialSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timeframe, setTimeframe] = useState<"this_month" | "last_3_months" | "this_year">("this_month");
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -71,6 +75,13 @@ export default function FinancialsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Report Export Modal */}
+      <ReportExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        defaultReportType="financial"
+      />
+
       {/* ===== Page Header ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -114,9 +125,13 @@ export default function FinancialsPage() {
               Tahun Ini
             </button>
           </div>
-          <Badge variant="success" className="py-1.5 px-3">
-            <Award className="h-3.5 w-3.5 mr-1" /> {data.financial_health_status}
-          </Badge>
+          <Button
+            variant="gradient"
+            size="sm"
+            onClick={() => setIsExportModalOpen(true)}
+          >
+            <Download className="h-4 w-4 mr-1" /> Ekspor PDF/Excel
+          </Button>
           <button
             onClick={loadData}
             className="p-2 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--muted)] hover:text-[var(--foreground)]"

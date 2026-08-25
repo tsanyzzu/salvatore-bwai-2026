@@ -166,12 +166,28 @@ export default function DashboardPage() {
         className="hidden"
       />
 
+      {/* Report Export Modal */}
+      <ReportExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        defaultReportType="financial"
+      />
+
       {/* ===== Page Header ===== */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-[var(--muted)] mt-1">
-          Ringkasan analitik penjualan & review toko Anda.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-[var(--muted)] mt-1">
+            Ringkasan analitik penjualan & review toko Anda.
+          </p>
+        </div>
+        <Button
+          variant="gradient"
+          onClick={() => setIsExportModalOpen(true)}
+          className="self-start sm:self-auto"
+        >
+          <Download className="h-4 w-4" /> Ekspor Laporan Resmi
+        </Button>
       </div>
 
       {/* ===== Stats Grid ===== */}
