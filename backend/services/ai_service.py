@@ -165,3 +165,36 @@ class AIService:
         except Exception as e:
             print(f"Error generating AI insight with Gemini: {e}")
         return "Sentimen positif terbukti baik. Kualitas produk dan pengiriman diapresiasi oleh sebagian besar pelanggan."
+
+    @staticmethod
+    def generate_review_reply(customer_name: str, rating: int, review_text: str, sentiment: str, tone: str = "friendly") -> str:
+        if not GEMINI_API_KEY:
+            if rating >= 4:
+                return f"Halo Kak {customer_name}! Terima kasih banyak atas ulasan bintang {rating}-nya. Senang sekali produk kami bisa memuaskan Anda! ☕ Sampai jumpa di pesanan berikutnya!"
+            elif rating == 3:
+                return f"Halo Kak {customer_name}, terima kasih atas masukan ulasannya. Kami mohon maaf jika ada pengalaman yang kurang maksimal. Kami akan berbenah agar lebih baik lagi! 🙏"
+            else:
+                return f"Halo Kak {customer_name}, kami sangat memohon maaf atas ketidaknyamanan ini. Mohon hubungi Customer Service kami via WA agar kami bisa memberikan solusi/penggantian produk. Terima kasih. 🙏"
+
+        try:
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            prompt = (
+                f"Buatkan balasan tanggapan resmi dari pemilik UMKM untuk ulasan pembeli berikut:\n"
+                f"Nama Pelanggan: {customer_name}\n"
+                f"Rating: {rating}/5 Bintang\n"
+                f"Sentimen: {sentiment}\n"
+                f"Isi Ulasan: \"{review_text}\"\n"
+                f"Tone Bahasa Balasan: {tone}\n\n"
+                "Instruksi:\n"
+                "1. Berikan respon dalam Bahasa Indonesia yang santun, apresiatif, dan profesional.\n"
+                "2. Jika ulasan negatif/bintang rendah, sertakan permohonan maaf dan tawaran solusi CS.\n"
+                "3. Format teks balasan langsung siap kirim tanpa tanda kutip pembuka/penutup."
+            )
+            resp = model.generate_content(prompt)
+            if resp.text:
+                return resp.text.strip()
+        except Exception as e:
+            print(f"Error generating AI review reply with Gemini: {e}")
+        
+        return f"Halo Kak {customer_name}, terima kasih banyak atas ulasan dan masukannya! Kami terus berkomitmen memberikan kualitas pelayanan terbaik bagi Anda. 🙏"
+
