@@ -21,6 +21,7 @@ import {
   ReportExportResponse,
   ReviewReplyRequest,
   ReviewReplyResponse,
+  ChannelSyncStatusResponse,
 } from "@/types/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -28,6 +29,37 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export async function fetchInventoryItems(): Promise<InventoryItem[]> {
   const res = await fetch(`${API_URL}/api/inventory/items`);
   if (!res.ok) throw new Error("Gagal mengambil data inventori");
+  return res.json();
+}
+
+export async function fetchChannelStatus(): Promise<ChannelSyncStatusResponse> {
+  const res = await fetch(`${API_URL}/api/channels/status`);
+  if (!res.ok) throw new Error("Gagal mengambil status channel e-commerce");
+  return res.json();
+}
+
+export async function toggleChannel(
+  channel_id: string,
+  is_connected: boolean
+): Promise<{ status: string; message: string }> {
+  const res = await fetch(`${API_URL}/api/channels/toggle-channel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ channel_id, is_connected }),
+  });
+  if (!res.ok) throw new Error("Gagal mengubah status channel");
+  return res.json();
+}
+
+export async function triggerChannelSync(
+  channel_id: string = "all"
+): Promise<{ status: string; message: string; synced_at: string }> {
+  const res = await fetch(`${API_URL}/api/channels/sync`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ channel_id }),
+  });
+  if (!res.ok) throw new Error("Gagal melakukan sinkronisasi channel");
   return res.json();
 }
 
