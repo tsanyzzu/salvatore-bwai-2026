@@ -76,6 +76,19 @@ export default function ChannelsPage() {
     }
   };
 
+  const handleSyncChannel = async (channelId: string) => {
+    setIsSyncing(true);
+    try {
+      const res = await triggerChannelSync(channelId);
+      toast(res.message, "success");
+      loadData();
+    } catch (err: any) {
+      toast(err.message || "Gagal melakukan sinkronisasi channel", "error");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const getChannelIcon = (id: string) => {
     switch (id) {
       case "shopee":
@@ -169,6 +182,16 @@ export default function ChannelsPage() {
                   {ch.last_synced_at || "-"}
                 </span>
               </div>
+
+              {ch.is_connected && (
+                <button
+                  onClick={() => handleSyncChannel(ch.id)}
+                  disabled={isSyncing}
+                  className="w-full mt-1 py-1.5 px-2 rounded-[var(--radius-md)] bg-[var(--surface-hover)] hover:bg-[var(--border)] border border-[var(--border)] text-xs text-[var(--foreground)] font-semibold flex items-center justify-center gap-1 transition-colors"
+                >
+                  <RefreshCw className="h-3 w-3 text-[var(--primary)]" /> Sync Channel Ini
+                </button>
+              )}
             </CardContent>
           </Card>
         ))}
