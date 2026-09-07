@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, Base, get_db
 import models
-from routers import inventory, marketing, analytics, pos, suppliers
+from routers import inventory, marketing, analytics, pos, suppliers, channels
 
 # ===== App Initialization =====
 app = FastAPI(
@@ -38,6 +38,7 @@ app.include_router(marketing.router)
 app.include_router(analytics.router)
 app.include_router(pos.router)
 app.include_router(suppliers.router)
+app.include_router(channels.router)
 
 # ===== Database Init & Seeding =====
 @app.on_event("startup")

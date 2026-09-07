@@ -209,6 +209,35 @@ export interface ReviewReplyResponse {
   status: string;
 }
 
+export interface ChannelStatusItem {
+  id: string;
+  name: string;
+  icon: string;
+  is_connected: boolean;
+  last_synced_at: string | null;
+  synced_product_count: number;
+  pending_sync_orders: number;
+}
+
+export interface ProductChannelMatrixItem {
+  sku: string;
+  name: string;
+  local_stock: number;
+  price: number;
+  shopee_stock: number;
+  tokopedia_stock: number;
+  tiktok_stock: number;
+  sync_status: string;
+}
+
+export interface ChannelSyncStatusResponse {
+  channels: ChannelStatusItem[];
+  matrix: ProductChannelMatrixItem[];
+  total_connected: number;
+  last_global_sync: string;
+}
+
+
 export interface RestokRecommendationItem {
   sku: string;
   product_name: string;

@@ -11,6 +11,7 @@ import {
   CreditCard,
   DollarSign,
   Truck,
+  Share2,
   Menu,
   X,
   Rocket,
@@ -46,6 +47,12 @@ const navItems = [
     href: "/suppliers",
     icon: Truck,
     description: "Supplier & EOQ",
+  },
+  {
+    label: "Channel Sync",
+    href: "/channels",
+    icon: Share2,
+    description: "Shopee & Marketplace",
   },
   {
     label: "Marketing",
