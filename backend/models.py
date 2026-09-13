@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean
 from sqlalchemy.sql import func
 from database import Base
 
@@ -46,5 +46,17 @@ class Supplier(Base):
     address = Column(String, nullable=True)
     lead_time_days = Column(Integer, default=3)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Channel(Base):
+    __tablename__ = "channels"
+    
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    icon = Column(String, nullable=False)
+    is_connected = Column(Boolean, default=True)
+    last_synced_at = Column(String, nullable=True)
+    pending_sync_orders = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 
 
