@@ -6,13 +6,19 @@ Clean Architecture Entrypoint
 
 import os
 import uvicorn
+import logging
 from datetime import datetime
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, Base, get_db
 import models
 from routers import inventory, marketing, analytics, pos, suppliers, channels
+
+logger = logging.getLogger("uvicorn.error")
 
 # ===== App Initialization =====
 app = FastAPI(
@@ -20,6 +26,47 @@ app = FastAPI(
     description="Backend API for MikroBoost — Smart UMKM Platform",
     version="1.0.0",
 )
+
+# ===== Global Exception Handlers =====
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            "status_code": exc.status_code,
+            "detail": exc.detail,
+            "path": request.url.path,
+        },
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    msg = "; ".join([f"{'.'.join(str(loc) for loc in err.get('loc', []))}: {err.get('msg')}" for err in errors])
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "success": False,
+            "status_code": 422,
+            "detail": f"Validasi data gagal: {msg}",
+            "errors": errors,
+            "path": request.url.path,
+        },
+    )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled Exception at {request.method} {request.url.path}: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "success": False,
+            "status_code": 500,
+            "detail": "Terjadi kesalahan internal pada server. Silakan hubungi admin.",
+            "path": request.url.path,
+        },
+    )
 
 # ===== CORS Middleware =====
 app.add_middleware(
