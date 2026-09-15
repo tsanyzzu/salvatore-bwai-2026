@@ -1,20 +1,22 @@
 import os
 import json
 import google.generativeai as genai
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
 
 class AIService:
-    @staticmethod
-    def is_configured() -> bool:
-        return bool(GEMINI_API_KEY)
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        if self.api_key:
+            genai.configure(api_key=self.api_key)
 
-    @staticmethod
-    def generate_captions(product_name: str, price: float, description: str, platform: str, tone: str) -> List[Dict[str, str]]:
-        if not GEMINI_API_KEY:
+    def is_configured(self) -> bool:
+        return bool(self.api_key)
+
+    def generate_captions(
+        self, product_name: str, price: float, description: str, platform: str, tone: str
+    ) -> List[Dict[str, str]]:
+        if not self.api_key:
             return [
                 {
                     "platform": "Instagram",
@@ -49,9 +51,8 @@ class AIService:
             })
         return results
 
-    @staticmethod
-    def analyze_trends(product_name: str, description: str) -> str:
-        if not GEMINI_API_KEY:
+    def analyze_trends(self, product_name: str, description: str) -> str:
+        if not self.api_key:
             return (
                 "📈 **Tren Analisis Pasar (Mock):**\n\n"
                 "🎥 **TikTok:** Konten bertema ASMR pembuatan produk atau review jujur (aesthetic unboxing) sedang viral. Pengguna menyukai musik bertempo cepat dan transisi ketukan.\n\n"
@@ -71,9 +72,10 @@ class AIService:
         response = model.generate_content(prompt)
         return response.text.strip()
 
-    @staticmethod
-    def generate_creative_hooks(product_name: str, price: float, description: str, platforms: List[str], mode: str, custom_prompt: str = None) -> List[Dict[str, str]]:
-        if not GEMINI_API_KEY:
+    def generate_creative_hooks(
+        self, product_name: str, price: float, description: str, platforms: List[str], mode: str, custom_prompt: Optional[str] = None
+    ) -> List[Dict[str, str]]:
+        if not self.api_key:
             results = []
             for plat in platforms:
                 plat_lower = plat.lower()
@@ -148,9 +150,8 @@ class AIService:
                 })
         return results
 
-    @staticmethod
-    def generate_review_insight(review_texts: str) -> str:
-        if not GEMINI_API_KEY:
+    def generate_review_insight(self, review_texts: str) -> str:
+        if not self.api_key:
             return "Sentimen positif tinggi. Pelanggan paling puas dengan kualitas produk dan kecepatan pengiriman."
 
         try:
@@ -166,9 +167,10 @@ class AIService:
             print(f"Error generating AI insight with Gemini: {e}")
         return "Sentimen positif terbukti baik. Kualitas produk dan pengiriman diapresiasi oleh sebagian besar pelanggan."
 
-    @staticmethod
-    def generate_review_reply(customer_name: str, rating: int, review_text: str, sentiment: str, tone: str = "friendly") -> str:
-        if not GEMINI_API_KEY:
+    def generate_review_reply(
+        self, customer_name: str, rating: int, review_text: str, sentiment: str, tone: str = "friendly"
+    ) -> str:
+        if not self.api_key:
             if rating >= 4:
                 return f"Halo Kak {customer_name}! Terima kasih banyak atas ulasan bintang {rating}-nya. Senang sekali produk kami bisa memuaskan Anda! ☕ Sampai jumpa di pesanan berikutnya!"
             elif rating == 3:
@@ -198,3 +200,13 @@ class AIService:
         
         return f"Halo Kak {customer_name}, terima kasih banyak atas ulasan dan masukannya! Kami terus berkomitmen memberikan kualitas pelayanan terbaik bagi Anda. 🙏"
 
+
+_ai_service_instance: Optional[AIService] = None
+
+
+def get_ai_service() -> AIService:
+    """FastAPI Dependency Provider for AIService."""
+    global _ai_service_instance
+    if _ai_service_instance is None:
+        _ai_service_instance = AIService()
+    return _ai_service_instance
