@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/utils";
 import {
   TrendingUp,
   TrendingDown,
@@ -85,8 +86,8 @@ export default function DashboardPage() {
       } else {
         toast(res.message || "Gagal mengunggah file ulasan", "error");
       }
-    } catch (err: any) {
-      toast("Terjadi kesalahan saat mengunggah berkas ulasan: " + err.message, "error");
+    } catch (err: unknown) {
+      toast("Terjadi kesalahan saat mengunggah berkas ulasan: " + getErrorMessage(err), "error");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

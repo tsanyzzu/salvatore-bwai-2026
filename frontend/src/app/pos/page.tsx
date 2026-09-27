@@ -5,6 +5,7 @@ import { useStore } from "@/lib/useStore";
 import { checkoutPOS } from "@/lib/api";
 import { InventoryItem, POSReceiptResponse } from "@/types/api";
 import { useToast } from "@/components/ui/toast";
+import { getErrorMessage } from "@/lib/utils";
 import {
   Card,
   CardHeader,
@@ -170,8 +171,8 @@ export default function POSPage() {
       toast("Transaksi Kasir Berhasil Diproses!", "success");
       loadInventory();
       loadDashboardStats();
-    } catch (err: any) {
-      toast(err.message || "Gagal memproses pembayaran kasir", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal memproses pembayaran kasir"), "error");
     } finally {
       setIsProcessing(false);
     }

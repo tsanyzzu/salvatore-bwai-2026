@@ -29,6 +29,7 @@ import { useStore } from "@/lib/useStore";
 import { addTransaction } from "@/lib/api";
 
 import { useToast } from "@/components/ui/toast";
+import { getErrorMessage } from "@/lib/utils";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -102,8 +103,8 @@ export default function InventoryPage() {
       } else {
         toast(res.message || "Gagal mencatat transaksi", "error");
       }
-    } catch (err: any) {
-      toast(err.message || "Gagal menambahkan transaksi", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal menambahkan transaksi"), "error");
     } finally {
       setIsSubmitting(false);
     }

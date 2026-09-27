@@ -5,6 +5,7 @@ import { exportReport } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { getErrorMessage } from "@/lib/utils";
 import {
   FileText,
   FileSpreadsheet,
@@ -67,8 +68,8 @@ export function ReportExportModal({
       } else {
         toast("Gagal mengunduh berkas laporan", "error");
       }
-    } catch (err: any) {
-      toast(err.message || "Terjadi kesalahan saat mengunduh laporan", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Terjadi kesalahan saat mengunduh laporan"), "error");
     } finally {
       setIsExporting(false);
     }

@@ -10,6 +10,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
@@ -67,8 +68,8 @@ export function CreativeHooksTab() {
         setSimulatedPosts((prev) => [...prev, id]);
         toast(res.message || "Postingan berhasil disimulasikan!", "success");
       }
-    } catch (err: any) {
-      toast(err.message || "Gagal mensimulasikan postingan", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal mensimulasikan postingan"), "error");
     } finally {
       setSimulatingId(null);
     }
@@ -93,8 +94,8 @@ export function CreativeHooksTab() {
       });
       setCreativeResults(results);
       toast("Creative Video Hooks berhasil dibuat!", "success");
-    } catch (err: any) {
-      toast(err.message || "Gagal generate creative hooks", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal generate creative hooks"), "error");
     } finally {
       setIsGeneratingCreative(false);
     }

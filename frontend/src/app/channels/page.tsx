@@ -16,6 +16,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
   Share2,
@@ -42,8 +43,8 @@ export default function ChannelsPage() {
     try {
       const res = await fetchChannelStatus();
       setData(res);
-    } catch (err: any) {
-      toast(err.message || "Gagal mengambil status channel e-commerce", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal mengambil status channel e-commerce"), "error");
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +59,8 @@ export default function ChannelsPage() {
       const res = await toggleChannel(id, !currentStatus);
       toast(res.message, "success");
       loadData();
-    } catch (err: any) {
-      toast(err.message || "Gagal mengubah koneksi channel", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal mengubah koneksi channel"), "error");
     }
   };
 
@@ -69,8 +70,8 @@ export default function ChannelsPage() {
       const res = await triggerChannelSync("all");
       toast(res.message, "success");
       loadData();
-    } catch (err: any) {
-      toast(err.message || "Gagal melakukan sinkronisasi", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal melakukan sinkronisasi"), "error");
     } finally {
       setIsSyncing(false);
     }
@@ -82,8 +83,8 @@ export default function ChannelsPage() {
       const res = await triggerChannelSync(channelId);
       toast(res.message, "success");
       loadData();
-    } catch (err: any) {
-      toast(err.message || "Gagal melakukan sinkronisasi channel", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal melakukan sinkronisasi channel"), "error");
     } finally {
       setIsSyncing(false);
     }

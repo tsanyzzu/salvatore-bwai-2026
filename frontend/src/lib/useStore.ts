@@ -13,6 +13,7 @@ import {
   fetchReviews,
   fetchReviewsSummary,
 } from "./api";
+import { getErrorMessage } from "./utils";
 
 interface AppState {
   inventory: InventoryItem[];
@@ -43,8 +44,8 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const data = await fetchInventoryItems();
       set({ inventory: data, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: getErrorMessage(err), isLoading: false });
     }
   },
   loadTransactions: async () => {
@@ -52,8 +53,8 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const data = await fetchTransactions();
       set({ transactions: data, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: getErrorMessage(err), isLoading: false });
     }
   },
   loadDashboardStats: async () => {
@@ -61,8 +62,8 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const data = await fetchDashboardStats();
       set({ dashboardStats: data, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: getErrorMessage(err), isLoading: false });
     }
   },
   loadReviews: async () => {
@@ -70,8 +71,8 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const data = await fetchReviews();
       set({ reviews: data, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: getErrorMessage(err), isLoading: false });
     }
   },
   loadReviewsSummary: async () => {
@@ -79,8 +80,8 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const data = await fetchReviewsSummary();
       set({ reviewsSummary: data, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+    } catch (err: unknown) {
+      set({ error: getErrorMessage(err), isLoading: false });
     }
   },
   updateStock: (sku, newStock) => {

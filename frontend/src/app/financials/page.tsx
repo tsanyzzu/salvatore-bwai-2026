@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReportExportModal } from "@/components/ui/ReportExportModal";
+import { getErrorMessage } from "@/lib/utils";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -49,8 +50,8 @@ export default function FinancialsPage() {
       const summary = await fetchFinancialSummary();
       setData(summary);
       toast("Data analitik keuangan berhasil diperbarui", "info");
-    } catch (err: any) {
-      toast(err.message || "Gagal mengambil data keuangan", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal mengambil data keuangan"), "error");
     } finally {
       setIsLoading(false);
     }

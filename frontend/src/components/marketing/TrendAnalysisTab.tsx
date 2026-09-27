@@ -9,6 +9,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Copy, RefreshCw, TrendingUp, Check } from "lucide-react";
@@ -51,8 +52,8 @@ export function TrendAnalysisTab() {
       } else {
         toast(res.message || "Gagal menganalisis tren", "error");
       }
-    } catch (err: any) {
-      toast(err.message || "Gagal menganalisis tren produk", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal menganalisis tren produk"), "error");
     } finally {
       setIsAnalyzing(false);
     }
