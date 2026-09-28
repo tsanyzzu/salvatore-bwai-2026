@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import useSWR from "swr";
 import { fetchFinancialSummary } from "@/lib/api";
 import { FinancialSummary } from "@/types/api";
 import { useToast } from "@/components/ui/toast";
@@ -39,27 +40,13 @@ function formatCurrency(amount: number) {
 
 export default function FinancialsPage() {
   const { toast } = useToast();
-  const [data, setData] = useState<FinancialSummary | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, mutate } = useSWR<FinancialSummary>(
+    "/api/analytics/financial-summary",
+    fetchFinancialSummary,
+    { revalidateOnFocus: true }
+  );
   const [timeframe, setTimeframe] = useState<"this_month" | "last_3_months" | "this_year">("this_month");
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const summary = await fetchFinancialSummary();
-      setData(summary);
-      toast("Data analitik keuangan berhasil diperbarui", "info");
-    } catch (err: unknown) {
-      toast(getErrorMessage(err, "Gagal mengambil data keuangan"), "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   if (isLoading) {
     return (
@@ -134,7 +121,10 @@ export default function FinancialsPage() {
             <Download className="h-4 w-4 mr-1" /> Ekspor PDF/Excel
           </Button>
           <button
-            onClick={loadData}
+            onClick={() => {
+              mutate();
+              toast("Data analitik keuangan berhasil diperbarui", "info");
+            }}
             className="p-2 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors text-[var(--muted)] hover:text-[var(--foreground)]"
             title="Refresh data"
           >

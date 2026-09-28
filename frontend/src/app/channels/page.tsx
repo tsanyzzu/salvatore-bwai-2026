@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import useSWR from "swr";
 import {
   fetchChannelStatus,
   toggleChannel,
@@ -34,31 +35,18 @@ import {
 
 export default function ChannelsPage() {
   const { toast } = useToast();
-  const [data, setData] = useState<ChannelSyncStatusResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, mutate } = useSWR<ChannelSyncStatusResponse>(
+    "/api/channels/status",
+    fetchChannelStatus,
+    { revalidateOnFocus: true }
+  );
   const [isSyncing, setIsSyncing] = useState(false);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetchChannelStatus();
-      setData(res);
-    } catch (err: unknown) {
-      toast(getErrorMessage(err, "Gagal mengambil status channel e-commerce"), "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const handleToggleChannel = async (id: string, currentStatus: boolean) => {
     try {
       const res = await toggleChannel(id, !currentStatus);
       toast(res.message, "success");
-      loadData();
+      mutate();
     } catch (err: unknown) {
       toast(getErrorMessage(err, "Gagal mengubah koneksi channel"), "error");
     }
@@ -69,7 +57,7 @@ export default function ChannelsPage() {
     try {
       const res = await triggerChannelSync("all");
       toast(res.message, "success");
-      loadData();
+      mutate();
     } catch (err: unknown) {
       toast(getErrorMessage(err, "Gagal melakukan sinkronisasi"), "error");
     } finally {
@@ -82,7 +70,7 @@ export default function ChannelsPage() {
     try {
       const res = await triggerChannelSync(channelId);
       toast(res.message, "success");
-      loadData();
+      mutate();
     } catch (err: unknown) {
       toast(getErrorMessage(err, "Gagal melakukan sinkronisasi channel"), "error");
     } finally {
