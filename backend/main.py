@@ -6,6 +6,7 @@ Clean Architecture Entrypoint
 
 import os
 import uvicorn
+from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -76,6 +77,47 @@ def on_startup():
         ]
         db.add_all(initial_suppliers)
         db.commit()
+
+    if db.query(models.Channel).count() == 0:
+        print("Seeding initial e-commerce channels data...")
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M WIB")
+        initial_channels = [
+            models.Channel(
+                id="shopee",
+                name="Shopee Official Store",
+                icon="ShoppingBag",
+                is_connected=True,
+                last_synced_at=now_str,
+                pending_sync_orders=0,
+            ),
+            models.Channel(
+                id="tokopedia",
+                name="Tokopedia Merchant",
+                icon="Store",
+                is_connected=True,
+                last_synced_at=now_str,
+                pending_sync_orders=1,
+            ),
+            models.Channel(
+                id="tiktok_shop",
+                name="TikTok Shop Indonesia",
+                icon="Video",
+                is_connected=True,
+                last_synced_at=now_str,
+                pending_sync_orders=0,
+            ),
+            models.Channel(
+                id="website",
+                name="Website Web Store",
+                icon="Globe",
+                is_connected=True,
+                last_synced_at=now_str,
+                pending_sync_orders=0,
+            ),
+        ]
+        db.add_all(initial_channels)
+        db.commit()
+
 
 
 @app.get("/api/health", tags=["Health Check"])
