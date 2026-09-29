@@ -19,8 +19,7 @@ from schemas.financials import (
 )
 from schemas.report import ReportExportRequest, ReportExportResponse
 from schemas.review_reply import ReviewReplyRequest, ReviewReplyResponse
-from schemas.report import ReportExportRequest, ReportExportResponse
-from services.ai_service import AIService
+from services.ai_service import AIService, get_ai_service
 from services.report_service import ReportService
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
@@ -138,7 +137,10 @@ async def get_reviews(db: Session = Depends(get_db)):
     return reviews
 
 @router.get("/summary", response_model=ReviewSummaryResponse)
-async def get_reviews_summary(db: Session = Depends(get_db)):
+async def get_reviews_summary(
+    db: Session = Depends(get_db),
+    ai_service: AIService = Depends(get_ai_service),
+):
     """Get sentiment summary stats, distribution, and AI insights from database reviews."""
     reviews = db.query(models.Review).all()
     total = len(reviews)
@@ -168,7 +170,7 @@ async def get_reviews_summary(db: Session = Depends(get_db)):
     avg_rating = round(float(avg_rating_val), 1) if avg_rating_val is not None else 0.0
 
     review_texts = "\n".join([f"- Rating {r.rating}/5: {r.text}" for r in reviews[:15]])
-    ai_insight = AIService.generate_review_insight(review_texts)
+    ai_insight = ai_service.generate_review_insight(review_texts)
 
     return ReviewSummaryResponse(
         total_reviews=total,
