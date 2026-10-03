@@ -5,6 +5,7 @@ import { generateReviewReply } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { getErrorMessage } from "@/lib/utils";
 import {
   MessageSquare,
   Sparkles,
@@ -54,8 +55,8 @@ export function ReviewReplyModal({
         tone,
       });
       setSuggestedReply(res.suggested_reply);
-    } catch (err: any) {
-      toast(err.message || "Gagal membuat balasan ulasan AI", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal membuat balasan ulasan AI"), "error");
     } finally {
       setIsGenerating(false);
     }

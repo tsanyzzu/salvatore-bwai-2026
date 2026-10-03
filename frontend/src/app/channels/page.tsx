@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import useSWR from "swr";
 import {
   fetchChannelStatus,
   toggleChannel,
@@ -16,6 +17,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
   Share2,
@@ -33,33 +35,20 @@ import {
 
 export default function ChannelsPage() {
   const { toast } = useToast();
-  const [data, setData] = useState<ChannelSyncStatusResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, mutate } = useSWR<ChannelSyncStatusResponse>(
+    "/api/channels/status",
+    fetchChannelStatus,
+    { revalidateOnFocus: true }
+  );
   const [isSyncing, setIsSyncing] = useState(false);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetchChannelStatus();
-      setData(res);
-    } catch (err: any) {
-      toast(err.message || "Gagal mengambil status channel e-commerce", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const handleToggleChannel = async (id: string, currentStatus: boolean) => {
     try {
       const res = await toggleChannel(id, !currentStatus);
       toast(res.message, "success");
-      loadData();
-    } catch (err: any) {
-      toast(err.message || "Gagal mengubah koneksi channel", "error");
+      mutate();
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal mengubah koneksi channel"), "error");
     }
   };
 
@@ -68,9 +57,9 @@ export default function ChannelsPage() {
     try {
       const res = await triggerChannelSync("all");
       toast(res.message, "success");
-      loadData();
-    } catch (err: any) {
-      toast(err.message || "Gagal melakukan sinkronisasi", "error");
+      mutate();
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal melakukan sinkronisasi"), "error");
     } finally {
       setIsSyncing(false);
     }
@@ -81,9 +70,9 @@ export default function ChannelsPage() {
     try {
       const res = await triggerChannelSync(channelId);
       toast(res.message, "success");
-      loadData();
-    } catch (err: any) {
-      toast(err.message || "Gagal melakukan sinkronisasi channel", "error");
+      mutate();
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal melakukan sinkronisasi channel"), "error");
     } finally {
       setIsSyncing(false);
     }

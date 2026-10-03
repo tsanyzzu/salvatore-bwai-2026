@@ -10,6 +10,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
@@ -51,8 +52,8 @@ export function CopywriterTab() {
         setSimulatedPosts((prev) => [...prev, id]);
         toast(res.message || "Postingan berhasil disimulasikan!", "success");
       }
-    } catch (err: any) {
-      toast(err.message || "Gagal mensimulasikan postingan", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal mensimulasikan postingan"), "error");
     } finally {
       setIsGenerating(false);
       setSimulatingId(null);
@@ -77,8 +78,8 @@ export function CopywriterTab() {
       });
       setCaptions(results);
       toast("Caption berhasil dihasilkan!", "success");
-    } catch (err: any) {
-      toast(err.message || "Gagal generate caption", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal generate caption"), "error");
     } finally {
       setIsGenerating(false);
     }

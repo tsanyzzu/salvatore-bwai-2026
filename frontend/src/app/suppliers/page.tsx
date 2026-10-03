@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { getErrorMessage } from "@/lib/utils";
 import {
   Truck,
   Plus,
@@ -62,8 +63,8 @@ export default function SuppliersPage() {
       ]);
       setSuppliers(supList);
       setRecommendations(recList);
-    } catch (err: any) {
-      toast(err.message || "Gagal mengambil data supplier", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal mengambil data supplier"), "error");
     } finally {
       setIsLoading(false);
     }
@@ -100,8 +101,8 @@ export default function SuppliersPage() {
       setEmail("");
       setAddress("");
       loadData();
-    } catch (err: any) {
-      toast(err.message || "Gagal menambahkan supplier", "error");
+    } catch (err: unknown) {
+      toast(getErrorMessage(err, "Gagal menambahkan supplier"), "error");
     } finally {
       setIsSubmitting(false);
     }
